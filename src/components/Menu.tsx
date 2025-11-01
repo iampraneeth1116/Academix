@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { role } from "@/lib/data";
 
 const menuItems = [
   {
@@ -127,6 +128,7 @@ const Menu = () => {
             {i.title}
           </span>
           {i.items.map((item) => {
+            if (item.visible.includes(role)) {
               return (
                 <Link
                   href={item.href}
@@ -137,6 +139,7 @@ const Menu = () => {
                   <span className="hidden lg:block">{item.label}</span>
                 </Link>
               );
+            }
           })}
         </div>
       ))}
@@ -145,3 +148,4 @@ const Menu = () => {
 };
 
 export default Menu;
+
