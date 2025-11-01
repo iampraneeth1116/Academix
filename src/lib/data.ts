@@ -850,137 +850,45 @@ export const eventsData = [
     endTime: "11:00",
   },
 ];
-
-export const announcementsData = [
-  {
-    id: 1,
-    title: "About 4A Math Test",
-    class: "4A",
-    date: "2025-01-01",
-  },
-  {
-    id: 2,
-    title: "About 3A Math Test",
-    class: "3A",
-    date: "2025-01-01",
-  },
-  {
-    id: 3,
-    title: "About 3B Math Test",
-    class: "3B",
-    date: "2025-01-01",
-  },
-  {
-    id: 4,
-    title: "About 6A Math Test",
-    class: "6A",
-    date: "2025-01-01",
-  },
-  {
-    id: 5,
-    title: "About 8C Math Test",
-    class: "8C",
-    date: "2025-01-01",
-  },
-  {
-    id: 6,
-    title: "About 2A Math Test",
-    class: "2A",
-    date: "2025-01-01",
-  },
-  {
-    id: 7,
-    title: "About 4C Math Test",
-    class: "4C",
-    date: "2025-01-01",
-  },
-  {
-    id: 8,
-    title: "About 4B Math Test",
-    class: "4B",
-    date: "2025-01-01",
-  },
-  {
-    id: 9,
-    title: "About 3C Math Test",
-    class: "3C",
-    date: "2025-01-01",
-  },
-  {
-    id: 10,
-    title: "About 1C Math Test",
-    class: "1C",
-    date: "2025-01-01",
-  },
-];
-
-
 export const calendarEvents = [
-  {
-    title: "Math",
-    allDay: false,
-    start: new Date(2025, 9, 29, 8, 0),
-    end: new Date(2025, 9, 29, 8, 45),
-  },
-  {
-    title: "English",
-    allDay: false,
-    start: new Date(2025, 9, 29, 9, 0),
-    end: new Date(2025, 9, 29, 9, 45),
-  },
-  {
-    title: "Biology",
-    allDay: false,
-    start: new Date(2025, 9, 29, 10, 0),
-    end: new Date(2025, 9, 29, 10, 45),
-  },
-  {
-    title: "Physics",
-    allDay: false,
-    start: new Date(2025, 9, 29, 11, 0),
-    end: new Date(2025, 9, 29, 11, 45),
-  },
-  {
-    title: "Chemistry",
-    allDay: false,
-    start: new Date(2025, 9, 29, 13, 0),
-    end: new Date(2025, 9, 29, 13, 45),
-  },
-  {
-    title: "History",
-    allDay: false,
-    start: new Date(2025, 9, 29, 14, 0),
-    end: new Date(2025, 9, 29, 14, 45),
-  },
-  {
-    title: "English",
-    allDay: false,
-    start: new Date(2025, 9, 30, 9, 0),
-    end: new Date(2025, 9, 30, 9, 45),
-  },
-  {
-    title: "Biology",
-    allDay: false,
-    start: new Date(2025, 9, 30, 10, 0),
-    end: new Date(2025, 9, 30, 10, 45),
-  },
-  {
-    title: "Physics",
-    allDay: false,
-    start: new Date(2025, 9, 30, 11, 0),
-    end: new Date(2025, 9, 30, 11, 45),
-  },
-  {
-    title: "History",
-    allDay: false,
-    start: new Date(2025, 9, 30, 14, 0),
-    end: new Date(2025, 9, 30, 14, 45),
-  },
-  {
-    title: "Math",
-    allDay: false,
-    start: new Date(2025, 10, 1, 8, 0),
-    end: new Date(2025, 10, 1, 8, 45),
-  },
+  // November 3, 2025
+  { title: "Math", allDay: false, start: new Date(2025, 10, 3, 8, 0), end: new Date(2025, 10, 3, 8, 45) },
+  { title: "English", allDay: false, start: new Date(2025, 10, 3, 9, 0), end: new Date(2025, 10, 3, 9, 45) },
+  { title: "Biology", allDay: false, start: new Date(2025, 10, 3, 10, 0), end: new Date(2025, 10, 3, 10, 45) },
+  { title: "Physics", allDay: false, start: new Date(2025, 10, 3, 11, 0), end: new Date(2025, 10, 3, 11, 45) },
+  { title: "Chemistry", allDay: false, start: new Date(2025, 10, 3, 13, 0), end: new Date(2025, 10, 3, 13, 45) },
+  { title: "History", allDay: false, start: new Date(2025, 10, 3, 14, 0), end: new Date(2025, 10, 3, 14, 45) },
 
-];
+  // November 4, 2025
+  { title: "Math", allDay: false, start: new Date(2025, 10, 4, 8, 0), end: new Date(2025, 10, 4, 8, 45) },
+  { title: "English", allDay: false, start: new Date(2025, 10, 4, 9, 0), end: new Date(2025, 10, 4, 9, 45) },
+  { title: "Biology", allDay: false, start: new Date(2025, 10, 4, 10, 0), end: new Date(2025, 10, 4, 10, 45) },
+  { title: "Physics", allDay: false, start: new Date(2025, 10, 4, 11, 0), end: new Date(2025, 10, 4, 11, 45) },
+  { title: "Chemistry", allDay: false, start: new Date(2025, 10, 4, 13, 0), end: new Date(2025, 10, 4, 13, 45) },
+  { title: "History", allDay: false, start: new Date(2025, 10, 4, 14, 0), end: new Date(2025, 10, 4, 14, 45) },
+
+  // November 5, 2025
+  { title: "Math", allDay: false, start: new Date(2025, 10, 5, 8, 0), end: new Date(2025, 10, 5, 8, 45) },
+  { title: "English", allDay: false, start: new Date(2025, 10, 5, 9, 0), end: new Date(2025, 10, 5, 9, 45) },
+  { title: "Biology", allDay: false, start: new Date(2025, 10, 5, 10, 0), end: new Date(2025, 10, 5, 10, 45) },
+  { title: "Physics", allDay: false, start: new Date(2025, 10, 5, 11, 0), end: new Date(2025, 10, 5, 11, 45) },
+  { title: "Chemistry", allDay: false, start: new Date(2025, 10, 5, 13, 0), end: new Date(2025, 10, 5, 13, 45) },
+  { title: "History", allDay: false, start: new Date(2025, 10, 5, 14, 0), end: new Date(2025, 10, 5, 14, 45) },
+
+  // November 6, 2025
+  { title: "Math", allDay: false, start: new Date(2025, 10, 6, 8, 0), end: new Date(2025, 10, 6, 8, 45) },
+  { title: "English", allDay: false, start: new Date(2025, 10, 6, 9, 0), end: new Date(2025, 10, 6, 9, 45) },
+  { title: "Biology", allDay: false, start: new Date(2025, 10, 6, 10, 0), end: new Date(2025, 10, 6, 10, 45) },
+  { title: "Physics", allDay: false, start: new Date(2025, 10, 6, 11, 0), end: new Date(2025, 10, 6, 11, 45) },
+  { title: "Chemistry", allDay: false, start: new Date(2025, 10, 6, 13, 0), end: new Date(2025, 10, 6, 13, 45) },
+  { title: "History", allDay: false, start: new Date(2025, 10, 6, 14, 0), end: new Date(2025, 10, 6, 14, 45) },
+
+  // November 7, 2025
+  { title: "Math", allDay: false, start: new Date(2025, 10, 7, 8, 0), end: new Date(2025, 10, 7, 8, 45) },
+  { title: "English", allDay: false, start: new Date(2025, 10, 7, 9, 0), end: new Date(2025, 10, 7, 9, 45) },
+  { title: "Biology", allDay: false, start: new Date(2025, 10, 7, 10, 0), end: new Date(2025, 10, 7, 10, 45) },
+  { title: "Physics", allDay: false, start: new Date(2025, 10, 7, 11, 0), end: new Date(2025, 10, 7, 11, 45) },
+  { title: "Chemistry", allDay: false, start: new Date(2025, 10, 7, 13, 0), end: new Date(2025, 10, 7, 13, 45) },
+  { title: "History", allDay: false, start: new Date(2025, 10, 7, 14, 0), end: new Date(2025, 10, 7, 14, 45) },
+
+]
