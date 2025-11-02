@@ -118,9 +118,9 @@ const TeacherListPage = () => {
           </div>
         </div>
       </div>
+
       {/* LIST */}
       <Table columns={columns} renderRow={renderRow} data={teachersData} />
-      
       <Pagination />
     </div>
   );
