@@ -3,6 +3,7 @@ import Link from "next/link";
 import Pagination from "@/components/Pagination";
 import TableSearch from "@/components/TableSearch";
 import { role, teachersData } from "@/lib/data";
+import Table from "@/components/Table";
 
 type Teacher = {
   id: number;
@@ -112,11 +113,14 @@ const TeacherListPage = () => {
               <button className="w-8 h-8 flex items-center justify-center rounded-full bg-aYellow">
                 <Image src="/plus.png" alt="" width={14} height={14} />
               </button>
-  
+
             )}
           </div>
         </div>
       </div>
+      {/* LIST */}
+      <Table columns={columns} renderRow={renderRow} data={teachersData} />
+      
       <Pagination />
     </div>
   );
