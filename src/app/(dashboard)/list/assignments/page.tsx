@@ -6,6 +6,8 @@ import {
   role,
 } from "@/lib/data";
 import Table from "@/components/Table";
+import FormModal from "@/components/FormModal";
+
 
 type Assignment = {
   id: number;
@@ -54,9 +56,8 @@ const AssignmentListPage = () => {
         <div className="flex items-center gap-2">
           {role === "admin" || role === "teacher" && (
             <>
-             <button className="w-7 h-7 flex items-center justify-center rounded-full bg-aPurple">
-                <Image src="/delete.png" alt="" width={16} height={16} />
-             </button>
+              <FormModal table="assignment" type="update" data={item} />
+              <FormModal table="assignment" type="delete" id={item.id} />
             </>
           )}
         </div>
@@ -80,16 +81,12 @@ const AssignmentListPage = () => {
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-aYellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" || role === "teacher" && ( 
-                <button className="w-8 h-8 flex items-center justify-center rounded-full bg-aYellow">
-                 <Image src="/plus.png" alt="" width={14} height={14} />
-                 </button>)}
+            {role === "admin" || role === "teacher" && <FormModal table="assignment" type="create" />}
           </div>
         </div>
       </div>
       {/* LIST */}
       <Table columns={columns} renderRow={renderRow} data={assignmentsData} />
-      {/* PAGINATION */}
       <Pagination />
     </div>
   );
