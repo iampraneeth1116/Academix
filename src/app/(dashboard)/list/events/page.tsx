@@ -3,6 +3,8 @@ import Pagination from "@/components/Pagination";
 import TableSearch from "@/components/TableSearch";
 import { eventsData, role } from "@/lib/data";
 import Table from "@/components/Table";
+import FormModal from "@/components/FormModal";
+
 
 type Event = {
   id: number;
@@ -58,9 +60,8 @@ const EventListPage = () => {
         <div className="flex items-center gap-2">
           {role === "admin" && (
             <>
-            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-aPurple">
-             <Image src="/delete.png" alt="" width={16} height={16} />
-            </button>
+              <FormModal table="event" type="update" data={item} />
+              <FormModal table="event" type="delete" id={item.id} />
             </>
           )}
         </div>
@@ -82,17 +83,12 @@ const EventListPage = () => {
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-aYellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" && ( 
-                <button className="w-8 h-8 flex items-center justify-center rounded-full bg-aYellow">
-               <Image src="/plus.png" alt="" width={14} height={14} />
-                 </button>)}
-                     
+            {role === "admin" && <FormModal table="event" type="create" />}
           </div>
         </div>
       </div>
       {/* LIST */}
       <Table columns={columns} renderRow={renderRow} data={eventsData} />
-      {/* PAGINATION */}
       <Pagination />
     </div>
   );
