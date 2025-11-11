@@ -1,6 +1,5 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -11,6 +10,8 @@ datasource db {
 model Admin {
   id       String @id
   username String @unique
+  password String
+  token   String?
 }
 
 model Student {
@@ -36,6 +37,42 @@ model Student {
   birthday    DateTime
 }
 
+model Teacher {
+  id        String    @id
+  username  String    @unique
+  name      String
+  surname   String
+  email     String?   @unique
+  phone     String?   @unique
+  address   String
+  img       String?
+  bloodType String
+  sex       UserSex
+  createdAt DateTime  @default(now())
+  teacherSubjects TeacherSubject[]
+  lessons   Lesson[]
+  classes   Class[]
+  birthday  DateTime
+}
+
+model Subject {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  teacherSubjects TeacherSubject[]
+  lessons  Lesson[]
+}
+
+model TeacherSubject {
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  teacherId String
+  subject   Subject @relation(fields: [subjectId], references: [id])
+  subjectId Int
+
+  @@id([teacherId, subjectId])
+}
+
+
+
 model Parent {
   id        String    @id
   username  String    @unique
@@ -53,7 +90,7 @@ model Grade {
   level Int @unique
 
   students Student[]
-  classes  Class[]
+  classess Class[]
 }
 
 model Class {
@@ -70,42 +107,6 @@ model Class {
   events        Event[]
   announcements Announcement[]
 }
-
-model Teacher {
-  id              String           @id
-  username        String           @unique
-  name            String
-  surname         String
-  email           String?          @unique
-  phone           String?          @unique
-  address         String
-  img             String?
-  bloodType       String
-  sex             UserSex
-  createdAt       DateTime         @default(now())
-  lessons         Lesson[]
-  classes         Class[]
-  birthday        DateTime
-  teacherSubjects TeacherSubject[] // back-relation
-}
-
-model Subject {
-  id              Int              @id @default(autoincrement())
-  name            String           @unique
-  lessons         Lesson[]
-  teacherSubjects TeacherSubject[] // back-relation
-}
-
-model TeacherSubject {
-  id        Int     @id @default(autoincrement())
-  teacher   Teacher @relation(fields: [teacherId], references: [id])
-  teacherId String
-  subject   Subject @relation(fields: [subjectId], references: [id])
-  subjectId Int
-
-  @@unique([teacherId, subjectId])
-}
-
 
 model Lesson {
   id        Int      @id @default(autoincrement())

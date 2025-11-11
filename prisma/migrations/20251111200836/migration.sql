@@ -2,6 +2,8 @@
 CREATE TABLE `Admin` (
     `id` VARCHAR(191) NOT NULL,
     `username` VARCHAR(191) NOT NULL,
+    `password` VARCHAR(191) NOT NULL,
+    `token` VARCHAR(191) NULL,
 
     UNIQUE INDEX `Admin_username_key`(`username`),
     PRIMARY KEY (`id`)
@@ -29,6 +31,44 @@ CREATE TABLE `Student` (
     UNIQUE INDEX `Student_email_key`(`email`),
     UNIQUE INDEX `Student_phone_key`(`phone`),
     PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Teacher` (
+    `id` VARCHAR(191) NOT NULL,
+    `username` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `surname` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(191) NULL,
+    `phone` VARCHAR(191) NULL,
+    `address` VARCHAR(191) NOT NULL,
+    `img` VARCHAR(191) NULL,
+    `bloodType` VARCHAR(191) NOT NULL,
+    `sex` ENUM('MALE', 'FEMALE') NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `birthday` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `Teacher_username_key`(`username`),
+    UNIQUE INDEX `Teacher_email_key`(`email`),
+    UNIQUE INDEX `Teacher_phone_key`(`phone`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Subject` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NOT NULL,
+
+    UNIQUE INDEX `Subject_name_key`(`name`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `TeacherSubject` (
+    `teacherId` VARCHAR(191) NOT NULL,
+    `subjectId` INTEGER NOT NULL,
+
+    PRIMARY KEY (`teacherId`, `subjectId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -66,46 +106,6 @@ CREATE TABLE `Class` (
     `gradeId` INTEGER NOT NULL,
 
     UNIQUE INDEX `Class_name_key`(`name`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `Teacher` (
-    `id` VARCHAR(191) NOT NULL,
-    `username` VARCHAR(191) NOT NULL,
-    `name` VARCHAR(191) NOT NULL,
-    `surname` VARCHAR(191) NOT NULL,
-    `email` VARCHAR(191) NULL,
-    `phone` VARCHAR(191) NULL,
-    `address` VARCHAR(191) NOT NULL,
-    `img` VARCHAR(191) NULL,
-    `bloodType` VARCHAR(191) NOT NULL,
-    `sex` ENUM('MALE', 'FEMALE') NOT NULL,
-    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `birthday` DATETIME(3) NOT NULL,
-
-    UNIQUE INDEX `Teacher_username_key`(`username`),
-    UNIQUE INDEX `Teacher_email_key`(`email`),
-    UNIQUE INDEX `Teacher_phone_key`(`phone`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `Subject` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(191) NOT NULL,
-
-    UNIQUE INDEX `Subject_name_key`(`name`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `TeacherSubject` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `teacherId` VARCHAR(191) NOT NULL,
-    `subjectId` INTEGER NOT NULL,
-
-    UNIQUE INDEX `TeacherSubject_teacherId_subjectId_key`(`teacherId`, `subjectId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -200,16 +200,16 @@ ALTER TABLE `Student` ADD CONSTRAINT `Student_classId_fkey` FOREIGN KEY (`classI
 ALTER TABLE `Student` ADD CONSTRAINT `Student_gradeId_fkey` FOREIGN KEY (`gradeId`) REFERENCES `Grade`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Class` ADD CONSTRAINT `Class_supervisorId_fkey` FOREIGN KEY (`supervisorId`) REFERENCES `Teacher`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `Class` ADD CONSTRAINT `Class_gradeId_fkey` FOREIGN KEY (`gradeId`) REFERENCES `Grade`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE `TeacherSubject` ADD CONSTRAINT `TeacherSubject_teacherId_fkey` FOREIGN KEY (`teacherId`) REFERENCES `Teacher`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `TeacherSubject` ADD CONSTRAINT `TeacherSubject_subjectId_fkey` FOREIGN KEY (`subjectId`) REFERENCES `Subject`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Class` ADD CONSTRAINT `Class_supervisorId_fkey` FOREIGN KEY (`supervisorId`) REFERENCES `Teacher`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Class` ADD CONSTRAINT `Class_gradeId_fkey` FOREIGN KEY (`gradeId`) REFERENCES `Grade`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Lesson` ADD CONSTRAINT `Lesson_subjectId_fkey` FOREIGN KEY (`subjectId`) REFERENCES `Subject`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
