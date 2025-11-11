@@ -21,11 +21,11 @@ export default function LogoutPage() {
 
         toast.success("Logged out successfully 👋");
 
-        window.location.href = '/login';
+        window.location.href = '/';
       } catch (error) {
         console.error("Logout error:", error);
         toast.error("Failed to logout");
-        router.push("/login"); 
+        router.push("/"); 
       }
     };
 
