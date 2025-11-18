@@ -1,21 +1,36 @@
-import { Day, PrismaClient, UserSex } from "@prisma/client";
+import { Day, PrismaClient, UserSex, UserRole, UserType } from "@prisma/client";
+import bcrypt from "bcryptjs";
+
 const prisma = new PrismaClient();
 
 async function main() {
+
+  // ======================
   // ADMIN
+  // ======================
   await prisma.admin.createMany({
     data: [
-      { id: "admin1", username: "admin1" , password: "$2a$10$j7GMfKV14lWwBnw8x0wD0ueCE.Ijfubiv8o.LnnM5.rWDC.9Acumu"},
-      { id: "admin2", username: "admin2", password: "$2a$10$NMCtJhLvizCtovA.uwmOM.NdO98kzfXMLYmq/IBB.3PhLAXInu5Mi" }
+      {
+        id: "admin1",
+        username: "admin1"
+      },
+      {
+        id: "admin2",
+        username: "admin2"
+      },
     ],
   });
 
+  // ======================
   // GRADE
+  // ======================
   for (let i = 1; i <= 6; i++) {
     await prisma.grade.create({ data: { level: i } });
   }
 
+  // ======================
   // CLASS
+  // ======================
   for (let i = 1; i <= 6; i++) {
     await prisma.class.create({
       data: {
@@ -26,7 +41,9 @@ async function main() {
     });
   }
 
+  // ======================
   // SUBJECT
+  // ======================
   const subjects = [
     "Mathematics",
     "Science",
@@ -43,7 +60,9 @@ async function main() {
     await prisma.subject.create({ data: { name } });
   }
 
+  // ======================
   // TEACHER
+  // ======================
   for (let i = 1; i <= 15; i++) {
     await prisma.teacher.create({
       data: {
@@ -63,7 +82,6 @@ async function main() {
 
   // LINK TEACHERS TO SUBJECTS AND CLASSES
   for (let i = 1; i <= 15; i++) {
-    // Link teacher to a subject via TeacherSubject
     await prisma.teacherSubject.create({
       data: {
         teacherId: `teacher${i}`,
@@ -71,14 +89,15 @@ async function main() {
       },
     });
 
-    // Assign teacher as supervisor of a class
     await prisma.class.update({
       where: { id: ((i - 1) % 6) + 1 },
       data: { supervisorId: `teacher${i}` },
     });
   }
 
-  // LESSON
+  // ======================
+  // LESSONS
+  // ======================
   for (let i = 1; i <= 30; i++) {
     await prisma.lesson.create({
       data: {
@@ -97,14 +116,16 @@ async function main() {
     });
   }
 
-  // PARENT
+  // ======================
+  // PARENTS
+  // ======================
   for (let i = 1; i <= 25; i++) {
     await prisma.parent.create({
       data: {
         id: `parentId${i}`,
         username: `parentId${i}`,
-        name: `PName ${i}`,
-        surname: `PSurname ${i}`,
+        name: `PName${i}`,
+        surname: `PSurname${i}`,
         email: `parent${i}@example.com`,
         phone: `123-456-789${i}`,
         address: `Address${i}`,
@@ -112,14 +133,16 @@ async function main() {
     });
   }
 
+  // ======================
   // STUDENT
+  // ======================
   for (let i = 1; i <= 50; i++) {
     await prisma.student.create({
       data: {
         id: `student${i}`,
         username: `student${i}`,
         name: `SName${i}`,
-        surname: `SSurname ${i}`,
+        surname: `SSurname${i}`,
         email: `student${i}@example.com`,
         phone: `987-654-321${i}`,
         address: `Address${i}`,
@@ -133,31 +156,37 @@ async function main() {
     });
   }
 
+  // ======================
   // EXAM
+  // ======================
   for (let i = 1; i <= 10; i++) {
     await prisma.exam.create({
       data: {
         title: `Exam ${i}`,
-        startTime: new Date(new Date().setHours(new Date().getHours() + 1)),
-        endTime: new Date(new Date().setHours(new Date().getHours() + 2)),
+        startTime: new Date(),
+        endTime: new Date(),
         lessonId: (i % 30) + 1,
       },
     });
   }
 
+  // ======================
   // ASSIGNMENT
+  // ======================
   for (let i = 1; i <= 10; i++) {
     await prisma.assignment.create({
       data: {
         title: `Assignment ${i}`,
-        startDate: new Date(new Date().setHours(new Date().getHours() + 1)),
-        dueDate: new Date(new Date().setDate(new Date().getDate() + 1)),
+        startDate: new Date(),
+        dueDate: new Date(),
         lessonId: (i % 30) + 1,
       },
     });
   }
 
-  // RESULT
+  // ======================
+  // RESULTS
+  // ======================
   for (let i = 1; i <= 10; i++) {
     await prisma.result.create({
       data: {
@@ -168,7 +197,9 @@ async function main() {
     });
   }
 
+  // ======================
   // ATTENDANCE
+  // ======================
   for (let i = 1; i <= 10; i++) {
     await prisma.attendance.create({
       data: {
@@ -180,20 +211,24 @@ async function main() {
     });
   }
 
+  // ======================
   // EVENT
+  // ======================
   for (let i = 1; i <= 5; i++) {
     await prisma.event.create({
       data: {
         title: `Event ${i}`,
         description: `Description for Event ${i}`,
-        startTime: new Date(new Date().setHours(new Date().getHours() + 1)),
-        endTime: new Date(new Date().setHours(new Date().getHours() + 2)),
+        startTime: new Date(),
+        endTime: new Date(),
         classId: (i % 5) + 1,
       },
     });
   }
 
+  // ======================
   // ANNOUNCEMENT
+  // ======================
   for (let i = 1; i <= 5; i++) {
     await prisma.announcement.create({
       data: {
@@ -205,6 +240,60 @@ async function main() {
     });
   }
 
+  // =========================================================
+  // USER LOGIN CREATION (ADMIN + TEACHERS + STUDENTS)
+  // =========================================================
+
+  console.log("Creating login accounts...");
+
+  // --- Admin Login ---
+  await prisma.userLogin.createMany({
+    data: [
+      {
+        username: "admin1",
+        password: await bcrypt.hash("admin@1", 10),
+        role: UserRole.ADMIN,
+        userType: UserType.ADMIN,
+        userId: "admin1",
+      },
+      {
+        username: "admin2",
+        password: await bcrypt.hash("admin@2", 10),
+        role: UserRole.ADMIN,
+        userType: UserType.ADMIN,
+        userId: "admin2",
+      },
+    ],
+  });
+
+  // --- Teacher Login ---
+  for (let i = 1; i <= 15; i++) {
+    await prisma.userLogin.create({
+      data: {
+        username: `teacher${i}`,
+        password: await bcrypt.hash("teacher123", 10),
+        role: UserRole.TEACHER,
+        userType: UserType.TEACHER,
+        userId: `teacher${i}`,
+      },
+    });
+  }
+
+  // --- Student Login ---
+  for (let i = 1; i <= 50; i++) {
+    await prisma.userLogin.create({
+      data: {
+        username: `student${i}`,
+        password: await bcrypt.hash("student123", 10),
+        role: UserRole.STUDENT,
+        userType: UserType.STUDENT,
+        userId: `student${i}`,
+      },
+    });
+  }
+
+
+  console.log("Login accounts created.");
   console.log("Seeding completed successfully.");
 }
 

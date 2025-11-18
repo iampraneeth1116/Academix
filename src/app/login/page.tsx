@@ -8,14 +8,27 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+
+  // Selected role
+  const [role, setRole] = useState<"admin" | "teacher" | "student">("admin");
+
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const DEMO_CREDENTIALS = {
-    email: "admin1",
-    password: "admin@1",
+  // Demo credentials
+  const DEMO = {
+    admin: { username: "admin1", password: "admin@1" },
+    teacher: { username: "teacher1", password: "teacher123" },
+    student: { username: "student1", password: "student123" },
+  };
+
+  const fillDemo = () => {
+    setUsername(DEMO[role].username);
+    setPassword(DEMO[role].password);
+    setError("");
+    toast(`Demo credentials for ${role} filled ✨`, { icon: "🎉" });
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -24,122 +37,130 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await login({ username: email, password });
+      const res = await login({ username, password });
 
-      toast.success("Login successful! 🎉");
-      setEmail("");
-      setPassword("");
+      toast.success("Login successful 🎉");
 
-      setTimeout(() => router.push("/admin"), 1000);
+      const user = res.user; // ✅ FIX: now TypeScript knows user exists
+
+      setTimeout(() => {
+        if (user.role === "ADMIN") router.push("/admin");
+        if (user.role === "TEACHER") router.push("/teacher");
+        if (user.role === "STUDENT") router.push("/student");
+      }, 800);
+
     } catch (err: any) {
-      console.error(err);
-      const msg = err.message || "Invalid credentials. Please try again.";
-      toast.error(msg);
-      setError(msg);
+      toast.error(err.message || "Invalid credentials");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const fillDemoCredentials = () => {
-    setEmail(DEMO_CREDENTIALS.email);
-    setPassword(DEMO_CREDENTIALS.password);
-    setError("");
-    toast("Demo credentials filled ✨", { icon: "🧑‍💻" });
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+
+        {/* ROLE NAVBAR */}
+        <div className="flex justify-around mb-6">
+          {(["admin", "teacher", "student"] as const).map((r) => (
+            <button
+              key={r}
+              onClick={() => setRole(r)}
+              className={`px-4 py-2 rounded-lg font-medium ${
+                role === r ? "bg-gray-900 text-white" : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              {r.toUpperCase()}
+            </button>
+          ))}
+        </div>
+
         <div className="bg-white rounded-lg shadow-sm p-8">
-          {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-900 rounded-lg mb-4">
               <Lock className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-2xl font-semibold text-gray-900">Welcome back</h1>
-            <p className="text-sm text-gray-500 mt-2">Sign in to your account</p>
+            <h1 className="text-2xl font-semibold text-gray-900">
+              {role.charAt(0).toUpperCase() + role.slice(1)} Login
+            </h1>
           </div>
 
-          {/* Error Message */}
           {error && (
-            <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex gap-2">
+              <AlertCircle className="w-5 h-5 text-red-600" />
               <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
 
-          {/* Form */}
+          {/* FORM */}
           <form onSubmit={handleSubmit} className="space-y-4 mb-6">
-            {/* Email Input */}
+            {/* Username */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Username
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
-                  id="email"
                   type="text"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition"
-                  placeholder="Enter your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="Enter username"
                   required
                 />
               </div>
             </div>
 
-            {/* Password Input */}
+            {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
-                  id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition"
-                  placeholder="Enter your password"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="Enter password"
                   required
                 />
               </div>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gray-900 text-white py-2.5 rounded-lg font-medium hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gray-900 text-white py-2.5 rounded-lg font-medium"
             >
               {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
 
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-xs font-medium text-gray-700 mb-2">Demo Credentials:</p>
-            <div className="space-y-1 text-xs text-gray-600">
-              <p>
-                <span className="font-medium">Username:</span> {DEMO_CREDENTIALS.email}
-              </p>
-              <p>
-                <span className="font-medium">Password:</span> {DEMO_CREDENTIALS.password}
-              </p>
-            </div>
+          {/* Demo */}
+          <div className="p-4 bg-gray-50 rounded-lg border">
+            <p className="text-xs font-medium text-gray-700 mb-2">
+              Demo credentials ({role}):
+            </p>
+            <p className="text-xs text-gray-600">
+              <b>Username:</b> {DEMO[role].username}
+            </p>
+            <p className="text-xs text-gray-600">
+              <b>Password:</b> {DEMO[role].password}
+            </p>
+
             <button
-              onClick={fillDemoCredentials}
-              className="mt-3 w-full text-xs font-medium text-gray-700 hover:text-gray-900 py-1.5 border border-gray-300 rounded hover:bg-gray-100 transition"
+              onClick={fillDemo}
+              className="mt-3 w-full text-xs font-medium border py-1.5 rounded"
             >
               Use demo credentials
             </button>
           </div>
         </div>
 
-        {/* Footer */}
         <p className="text-center text-sm text-gray-500 mt-6">
           Protected by industry-standard encryption
         </p>

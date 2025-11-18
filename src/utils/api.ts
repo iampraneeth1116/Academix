@@ -1,20 +1,35 @@
+// ==========================
+// Types
+// ==========================
 export interface LoginParams {
   username: string;
   password: string;
 }
 
-export interface Admin {
+export interface UserPayload {
   id: string;
   username: string;
+  role: "ADMIN" | "TEACHER" | "STUDENT" | "PARENT";
+  type: "ADMIN" | "TEACHER" | "STUDENT" | "PARENT";
 }
 
 export interface LoginResponse {
   message: string;
-  admin: Admin;
+  user: UserPayload;
   token?: string;
 }
 
-export async function login({ username, password }: LoginParams): Promise<LoginResponse> {
+export interface LogoutResponse {
+  message: string;
+}
+
+// ==========================
+// Login Function
+// ==========================
+export async function login({
+  username,
+  password,
+}: LoginParams): Promise<LoginResponse> {
   try {
     const res = await fetch("/api/auth/login", {
       method: "POST",
@@ -35,10 +50,9 @@ export async function login({ username, password }: LoginParams): Promise<LoginR
   }
 }
 
-export interface LogoutResponse {
-  message: string;
-}
-
+// ==========================
+// Logout Function
+// ==========================
 export async function logout(): Promise<LogoutResponse> {
   try {
     const res = await fetch("/api/auth/logout", {
@@ -49,7 +63,9 @@ export async function logout(): Promise<LogoutResponse> {
       const errData = await res.json().catch(() => ({}));
       throw new Error(errData.error || `Logout failed (${res.status})`);
     }
-    window.location.href = '/login';
+
+    // redirect after logout
+    window.location.href = "/login";
 
     const data = (await res.json()) as LogoutResponse;
     return data;

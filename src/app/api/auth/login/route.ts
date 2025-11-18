@@ -10,48 +10,47 @@ export async function POST(req: Request) {
   try {
     const { username, password } = await req.json();
 
-    if (!username || !password) {
+    if (!username || !password)
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
-    }
 
-    const admin = await prisma.admin.findUnique({ where: { username } });
-    if (!admin) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const userLogin = await prisma.userLogin.findUnique({ where: { username } });
 
-    const isValid = await bcrypt.compare(password, admin.password);
-    if (!isValid) return NextResponse.json({ error: "Invalid password" }, { status: 401 });
+    if (!userLogin)
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    const accessToken = await jwt.sign(
-      { id: admin.id, username: admin.username },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const isValid = await bcrypt.compare(password, userLogin.password);
 
-    await prisma.admin.update({
-      where: { id: admin.id },
-      data: { token: accessToken },
+    if (!isValid)
+      return NextResponse.json({ error: "Invalid password" }, { status: 401 });
+
+    const payload = {
+      id: userLogin.userId,
+      username: userLogin.username,
+      role: userLogin.role,       // ADMIN | TEACHER | STUDENT
+      type: userLogin.userType,
+    };
+
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
+
+    await prisma.userLogin.update({
+      where: { id: userLogin.id },
+      data: { token },
     });
 
-    const res = NextResponse.json(
-      {
-        message: "Login successful",
-        admin: { id: admin.id, username: admin.username },
-      },
-      { status: 200 }
-    );
+    const res = NextResponse.json({ message: "Success", user: payload });
 
     res.cookies.set({
       name: "accessToken",
-      value: accessToken,
+      value: token,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
       path: "/",
       maxAge: 7 * 24 * 60 * 60,
     });
 
     return res;
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
