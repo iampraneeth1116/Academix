@@ -14,28 +14,11 @@ type Exam = {
 };
 
 const columns = [
-  {
-    header: "Subject Name",
-    accessor: "name",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-  },
-  {
-    header: "Teacher",
-    accessor: "teacher",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Date",
-    accessor: "date",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  { header: "Subject Name", accessor: "name" },
+  { header: "Class", accessor: "class" },
+  { header: "Teacher", accessor: "teacher", className: "hidden md:table-cell" },
+  { header: "Date", accessor: "date", className: "hidden md:table-cell" },
+  { header: "Actions", accessor: "action" },
 ];
 
 const ExamListPage = () => {
@@ -50,7 +33,7 @@ const ExamListPage = () => {
       <td className="hidden md:table-cell">{item.date}</td>
       <td>
         <div className="flex items-center gap-2">
-          {role === "admin" || role === "teacher" && (
+          {(role === "admin" || role === "teacher") && (
             <>
               <FormModal table="exam" type="update" data={item} />
               <FormModal table="exam" type="delete" id={item.id} />
@@ -60,6 +43,9 @@ const ExamListPage = () => {
       </td>
     </tr>
   );
+
+  // Added so pagination works
+  const page = 1;
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
@@ -75,13 +61,18 @@ const ExamListPage = () => {
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-aYellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" || role === "teacher" && <FormModal table="exam" type="create" />}
+            {(role === "admin" || role === "teacher") && (
+              <FormModal table="exam" type="create" />
+            )}
           </div>
         </div>
       </div>
+
       {/* LIST */}
       <Table columns={columns} renderRow={renderRow} data={examsData} />
-      <Pagination />
+
+      {/* FIXED PAGINATION */}
+      <Pagination page={page} count={examsData.length} />
     </div>
   );
 };

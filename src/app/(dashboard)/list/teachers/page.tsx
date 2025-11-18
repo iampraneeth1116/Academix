@@ -18,7 +18,7 @@ type TeacherList = Teacher & {
 const TeacherListPage = async ({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | undefined };
+  searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
   // ============================
   // JWT AUTH — GET ROLE
@@ -47,7 +47,6 @@ const TeacherListPage = async ({
     { header: "Classes", accessor: "classes", className: "hidden md:table-cell" },
     { header: "Phone", accessor: "phone", className: "hidden lg:table-cell" },
     { header: "Address", accessor: "address", className: "hidden lg:table-cell" },
-
     ...(role === "ADMIN"
       ? [{ header: "Actions", accessor: "action" }]
       : []),
@@ -108,7 +107,9 @@ const TeacherListPage = async ({
   // ============================
   // PAGINATION & SEARCH
   // ============================
-  const { page, ...queryParams } = searchParams;
+  const params = await searchParams; // 🔥 FIX HERE
+  const { page, ...queryParams } = params;
+
   const p = page ? Number(page) : 1;
 
   const query: Prisma.TeacherWhereInput = {};
@@ -126,7 +127,7 @@ const TeacherListPage = async ({
         query.OR = [
           { name: { contains: v } },
           { surname: { contains: v } },
-          { username: { contains: v } }
+          { username: { contains: v } },
         ];
       }
     }
@@ -153,7 +154,6 @@ const TeacherListPage = async ({
   // ============================
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
-
       {/* TOP BAR */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Teachers</h1>

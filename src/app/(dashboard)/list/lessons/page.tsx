@@ -5,7 +5,6 @@ import { lessonsData, role } from "@/lib/data";
 import Table from "@/components/Table";
 import FormModal from "@/components/FormModal";
 
-
 type Lesson = {
   id: number;
   subject: string;
@@ -55,6 +54,9 @@ const LessonListPage = () => {
     </tr>
   );
 
+  // Pagination fix: page must exist
+  const page = 1;
+
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -73,9 +75,12 @@ const LessonListPage = () => {
           </div>
         </div>
       </div>
+
       {/* LIST */}
       <Table columns={columns} renderRow={renderRow} data={lessonsData} />
-      <Pagination />
+
+      {/* FIXED PAGINATION */}
+      <Pagination page={page} count={lessonsData.length} />
     </div>
   );
 };
