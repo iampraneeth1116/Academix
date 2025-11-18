@@ -1,3 +1,28 @@
+enum UserSex {
+  MALE
+  FEMALE
+}
+
+enum Day {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+}
+enum UserRole {
+  ADMIN
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+enum UserType {
+  ADMIN   
+  TEACHER
+  STUDENT
+  PARENT
+}
 generator client {
   provider = "prisma-client-js"
 }
@@ -24,19 +49,6 @@ model UserLogin {
   token     String? @db.Text   // 👈 FIX HERE
 }
 
-enum UserRole {
-  ADMIN
-  TEACHER
-  STUDENT
-  PARENT
-}
-
-enum UserType {
-  ADMIN   
-  TEACHER
-  STUDENT
-  PARENT
-}
 
 model Student {
   id          String       @id
@@ -218,15 +230,3 @@ model Announcement {
   class   Class? @relation(fields: [classId], references: [id])
 }
 
-enum UserSex {
-  MALE
-  FEMALE
-}
-
-enum Day {
-  MONDAY
-  TUESDAY
-  WEDNESDAY
-  THURSDAY
-  FRIDAY
-}

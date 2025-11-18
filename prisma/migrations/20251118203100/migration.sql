@@ -2,10 +2,24 @@
 CREATE TABLE `Admin` (
     `id` VARCHAR(191) NOT NULL,
     `username` VARCHAR(191) NOT NULL,
-    `password` VARCHAR(191) NOT NULL,
+    `password` VARCHAR(191) NULL,
     `token` VARCHAR(191) NULL,
 
     UNIQUE INDEX `Admin_username_key`(`username`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `UserLogin` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `username` VARCHAR(191) NOT NULL,
+    `password` VARCHAR(191) NOT NULL,
+    `role` ENUM('ADMIN', 'TEACHER', 'STUDENT', 'PARENT') NOT NULL,
+    `userId` VARCHAR(191) NOT NULL,
+    `userType` ENUM('ADMIN', 'TEACHER', 'STUDENT', 'PARENT') NOT NULL,
+    `token` TEXT NULL,
+
+    UNIQUE INDEX `UserLogin_username_key`(`username`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -55,20 +69,20 @@ CREATE TABLE `Teacher` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `TeacherSubject` (
+    `teacherId` VARCHAR(191) NOT NULL,
+    `subjectId` INTEGER NOT NULL,
+
+    PRIMARY KEY (`teacherId`, `subjectId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `Subject` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
 
     UNIQUE INDEX `Subject_name_key`(`name`),
     PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `TeacherSubject` (
-    `teacherId` VARCHAR(191) NOT NULL,
-    `subjectId` INTEGER NOT NULL,
-
-    PRIMARY KEY (`teacherId`, `subjectId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
