@@ -1,3 +1,12 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
 enum UserSex {
   MALE
   FEMALE
@@ -10,6 +19,7 @@ enum Day {
   THURSDAY
   FRIDAY
 }
+
 enum UserRole {
   ADMIN
   TEACHER
@@ -22,14 +32,6 @@ enum UserType {
   TEACHER
   STUDENT
   PARENT
-}
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 model Admin {
@@ -46,9 +48,8 @@ model UserLogin {
   role      UserRole
   userId    String
   userType  UserType
-  token     String? @db.Text   // 👈 FIX HERE
+  token     String? @db.Text
 }
-
 
 model Student {
   id          String       @id
@@ -106,10 +107,6 @@ model Subject {
   teacherSubjects TeacherSubject[]
   lessons  Lesson[]
 }
-
-
-
-
 
 model Parent {
   id        String    @id
@@ -229,4 +226,3 @@ model Announcement {
   classId Int?
   class   Class? @relation(fields: [classId], references: [id])
 }
-
