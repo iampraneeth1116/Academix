@@ -1,13 +1,14 @@
-import { FieldError } from "react-hook-form";
+import { FieldError, FieldErrorsImpl, Merge } from "react-hook-form";
 
 type InputFieldProps = {
   label: string;
   type?: string;
   register: any;
   name: string;
-  defaultValue?: string;
-  error?: FieldError;
+  defaultValue?: string | number;
+  error?: FieldError | Merge<FieldError, FieldErrorsImpl<any>> | undefined;
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
+  hidden?: boolean;
 };
 
 const InputField = ({
@@ -18,10 +19,16 @@ const InputField = ({
   defaultValue,
   error,
   inputProps,
+  hidden = false,
 }: InputFieldProps) => {
+  if (hidden) {
+    return <input type="hidden" {...register(name)} defaultValue={defaultValue} />;
+  }
+
   return (
     <div className="flex flex-col gap-2 w-full md:w-1/4">
       <label className="text-xs text-gray-500">{label}</label>
+
       <input
         type={type}
         {...register(name)}
@@ -29,8 +36,9 @@ const InputField = ({
         {...inputProps}
         defaultValue={defaultValue}
       />
+
       {error?.message && (
-        <p className="text-xs text-red-400">{error.message.toString()}</p>
+        <p className="text-xs text-red-400">{String(error.message)}</p>
       )}
     </div>
   );
