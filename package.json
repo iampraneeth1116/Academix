@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "eslint"
   },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+  },
   "dependencies": {
     "@chakra-ui/react": "^3.29.0",
     "@fullcalendar/daygrid": "^6.1.19",
@@ -30,10 +33,10 @@
     "react-hook-form": "^7.66.0",
     "react-hot-toast": "^2.6.0",
     "recharts": "^3.3.0",
-    "ts-node": "^10.9.2",
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@swc/core": "^1.15.3",
     "@tailwindcss/postcss": "^4",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
@@ -44,6 +47,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }
