@@ -1,9 +1,9 @@
 import UserCard from "@/components/UserCard";
-import CountChart from "@/components/CountChart";
-import AttendanceChart from "@/components/AttendanceChart";
-import FinanceChart from "@/components/FinanceChart";
-import EventCalendar from "@/components/EventCalendar";
-import Announcements from "@/components/Announcements";
+// import CountChart from "@/components/CountChart";
+import AttendanceChartContainer from "@/components/AttendanceChartContainer";
+// import FinanceChart from "@/components/FinanceChart";
+// import EventCalendar from "@/components/EventCalendar";
+// import Announcements from "@/components/Announcements";
 
 const AdminPage = () => {
   return (
@@ -21,22 +21,22 @@ const AdminPage = () => {
         <div className="flex gap-4 flex-col lg:flex-row">
 
           <div className="w-full lg:w-1/3 h-[450px]">
-            <CountChart />
+            {/* <CountChart /> */}
           </div>
 
           <div className="w-full lg:w-2/3 h-[450px]">
-            <AttendanceChart />
+            <AttendanceChartContainer />
           </div>
         </div>
         {/* BOTTOM CHART */}
         <div className="w-full h-[500px]">
-          <FinanceChart />
+          {/* <FinanceChart /> */}
         </div>
       </div>
       {/* R */}
       <div className="w-full lg:w-1/3 flex flex-col gap-8">
-        <EventCalendar />
-        <Announcements/>
+        {/* <EventCalendar /> */}
+        {/* <Announcements/> */}
       </div>
     </div>
   );
