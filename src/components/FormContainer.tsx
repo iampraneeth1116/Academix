@@ -25,9 +25,7 @@ export type FormContainerProps = {
 const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
   let relatedData = {};
 
-  // =============================
-  // JWT AUTH
-  // =============================
+
   const cookiesStore = await cookies();
   const token = cookiesStore.get("accessToken")?.value;
 
@@ -37,14 +35,14 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
   if (token) {
     try {
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-      role = decoded.role.toLowerCase(); // "ADMIN" → "admin"
+      role = decoded.role.toLowerCase(); 
       currentUserId = decoded.id;
     } catch (err) {
       role = "guest";
     }
   }
 
-  // If it's NOT delete, load related data
+
   if (type !== "delete") {
     switch (table) {
       case "subject":
