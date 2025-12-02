@@ -1,6 +1,6 @@
-// import Announcements from "@/components/Announcements";
+import Announcements from "@/components/Announcements";
 import BigCalendarContainer from "@/components/BigCalendarContainer";
-// import EventCalendar from "@/components/EventCalendar";
+import EventCalendar from "@/components/EventCalendar";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
@@ -53,8 +53,9 @@ const StudentPage = async () => {
       </div>
 
       <div className="w-full xl:w-1/3 flex flex-col gap-8">
-        {/* <EventCalendar classId={student.classId} />
-        <Announcements classId={student.classId} /> */}
+        <EventCalendar classId={student.classId} />
+        
+        <Announcements classId={student.classId} />
 
       </div>
     </div>
