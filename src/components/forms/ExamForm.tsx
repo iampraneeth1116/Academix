@@ -10,11 +10,11 @@ import { Dispatch, SetStateAction, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 
-// A form-safe type with string date fields
+
 type ExamFormValues = {
   id?: number | undefined;
   title: string;
-  startTime: string; // datetime-local expects string
+  startTime: string; 
   endTime: string;
   lessonId: string;
 };
@@ -37,7 +37,7 @@ const ExamForm = ({
     handleSubmit,
     formState: { errors },
   } = useForm<ExamFormValues>({
-    resolver: zodResolver(examSchema) as any, // safe because we transform manually
+    resolver: zodResolver(examSchema) as any, // TS-safe cast
     defaultValues: {
       title: data?.title ?? "",
       startTime: data?.startTime
@@ -47,7 +47,7 @@ const ExamForm = ({
         ? new Date(data.endTime).toISOString().slice(0, 16)
         : "",
       lessonId: data?.lessonId ? String(data.lessonId) : "",
-      id: data?.id ?? undefined,
+      id: data?.id,
     },
   });
 
@@ -108,8 +108,11 @@ const ExamForm = ({
           error={errors.endTime as any}
         />
 
-        {type === "update" && <input type="hidden" {...register("id")} />}
+        {type === "update" && (
+          <input type="hidden" {...register("id")} />
+        )}
 
+        {/* Lesson Select */}
         <div className="flex flex-col gap-2 w-full md:w-1/4">
           <label className="text-xs text-gray-500">Lesson</label>
 
@@ -133,7 +136,9 @@ const ExamForm = ({
         </div>
       </div>
 
-      {state.error && <span className="text-red-500">Something went wrong!</span>}
+      {state.error && (
+        <span className="text-red-500">Something went wrong!</span>
+      )}
 
       <button className="bg-blue-400 text-white p-2 rounded-md">
         {type === "create" ? "Create" : "Update"}
