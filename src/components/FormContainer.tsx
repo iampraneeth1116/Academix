@@ -1,7 +1,5 @@
 import prisma from "@/lib/prisma";
 import FormModal from "./FormModal";
-import jwt from "jsonwebtoken";
-import { cookies } from "next/headers";
 
 export type FormContainerProps = {
   table:
@@ -20,28 +18,19 @@ export type FormContainerProps = {
   type: "create" | "update" | "delete";
   data?: any;
   id?: number | string;
+  role?: "admin" | "teacher" | "student" | "parent" | "guest";
+  currentUserId?: string | null;
 };
 
-const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
+const FormContainer = async ({
+  table,
+  type,
+  data,
+  id,
+  role = "guest",
+  currentUserId = null,
+}: FormContainerProps) => {
   let relatedData = {};
-
-
-  const cookiesStore = await cookies();
-  const token = cookiesStore.get("accessToken")?.value;
-
-  let role: "admin" | "teacher" | "student" | "parent" | "guest" = "guest";
-  let currentUserId: string | null = null;
-
-  if (token) {
-    try {
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-      role = decoded.role.toLowerCase(); 
-      currentUserId = decoded.id;
-    } catch (err) {
-      role = "guest";
-    }
-  }
-
 
   if (type !== "delete") {
     switch (table) {
@@ -96,15 +85,13 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
   }
 
   return (
-    <div>
-      <FormModal
-        table={table}
-        type={type}
-        data={data}
-        id={id}
-        relatedData={relatedData}
-      />
-    </div>
+    <FormModal
+      table={table}
+      type={type}
+      data={data}
+      id={id}
+      relatedData={relatedData}
+    />
   );
 };
 

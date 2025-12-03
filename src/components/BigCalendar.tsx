@@ -17,7 +17,7 @@ const BigCalendar = ({ data }: { data: CalendarEvent[] }) => {
   const [view, setView] = useState<View>("work_week");
 
   return (
-    <div className="h-[90vh] w-full p-4">
+    <div className="h-[90vh] min-h-[400px] w-full p-4">
       <Calendar
         localizer={localizer}
         events={data}

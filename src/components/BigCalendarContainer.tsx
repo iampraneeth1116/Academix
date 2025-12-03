@@ -15,18 +15,23 @@ const BigCalendarContainer = async ({
         ? { teacherId: id as string }
         : { classId: id as number }),
     },
+    select: {
+      name: true,
+      startTime: true,
+      endTime: true,
+    },
   });
 
   const data = dataRes.map((lesson) => ({
     title: lesson.name,
-    start: lesson.startTime,
-    end: lesson.endTime,
+    start: new Date(lesson.startTime),
+    end: new Date(lesson.endTime),
   }));
 
   const schedule = adjustScheduleToCurrentWeek(data);
 
   return (
-    <div className="">
+    <div>
       <BigCalendar data={schedule} />
     </div>
   );

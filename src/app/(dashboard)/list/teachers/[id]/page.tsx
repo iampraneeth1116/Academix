@@ -10,7 +10,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 
-const SingleTeacherPage = async ({ params: { id } }: { params: { id: string } }) => {
+const SingleTeacherPage = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const { id } = await params;  // ← FIX
+
   // ============================
   // JWT AUTH
   // ============================

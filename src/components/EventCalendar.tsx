@@ -15,12 +15,8 @@ const EventCalendar = ({ classId }: { classId?: number }) => {
   useEffect(() => {
     if (value instanceof Date) {
       const dateParam = value.toISOString().split("T")[0];
-
-      if (classId) {
-        router.push(`?date=${dateParam}&classId=${classId}`);
-      } else {
-        router.push(`?date=${dateParam}`);
-      }
+      const query = classId ? `?date=${dateParam}&classId=${classId}` : `?date=${dateParam}`;
+      router.replace(query);
     }
   }, [value, router, classId]);
 
