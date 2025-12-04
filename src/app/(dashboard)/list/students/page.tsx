@@ -19,9 +19,7 @@ const StudentListPage = async ({
 }: {
   searchParams: { [key: string]: string | undefined };
 }) => {
-  // ============================
-  // JWT AUTH — GET ROLE
-  // ============================
+
   const cookieStore = await cookies();
   const token = cookieStore.get("accessToken")?.value;
 
@@ -112,17 +110,15 @@ const StudentListPage = async ({
 
       case "search":
         query.OR = [
-          { name: { contains: value, mode: "insensitive" } },
-          { surname: { contains: value, mode: "insensitive" } },
-          { username: { contains: value, mode: "insensitive" } },
+          { name: { contains: value }},
+          { surname: { contains: value }},
+          { username: { contains: value } },
         ];
         break;
     }
   }
 
-  // ============================
-  // DATABASE FETCH
-  // ============================
+
   const [data, count] = await prisma.$transaction([
     prisma.student.findMany({
       where: query,
@@ -135,9 +131,7 @@ const StudentListPage = async ({
     prisma.student.count({ where: query }),
   ]);
 
-  // ============================
-  // RENDER PAGE
-  // ============================
+
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP BAR */}

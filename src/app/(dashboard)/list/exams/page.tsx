@@ -96,22 +96,36 @@ const ExamListPage = async ({
     lesson: {},
   };
 
-  for (const [key, value] of Object.entries(queryParams)) {
-    if (!value) continue;
-    switch (key) {
-      case "classId":
-        query.lesson!.classId = parseInt(value);
-        break;
-      case "teacherId":
-        query.lesson!.teacherId = value;
-        break;
-      case "search":
-        query.lesson!.subject = {
-          name: { contains: value, mode: "insensitive" },
-        };
-        break;
-    }
+for (const [key, value] of Object.entries(queryParams)) {
+  if (!value) continue;
+
+  switch (key) {
+    case "classId":
+      query.lesson!.classId = parseInt(value);
+      break;
+
+    case "teacherId":
+      query.lesson!.teacherId = value;
+      break;
+
+    case "search":
+      query.AND = [
+        {
+          lesson: {
+            subject: {
+              name: {
+                contains: value,
+                
+              },
+            },
+          },
+        },
+      ];
+      break;
   }
+}
+
+
 
   // ROLE RESTRICTIONS
   switch (role) {
