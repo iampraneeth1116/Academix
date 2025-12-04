@@ -74,25 +74,27 @@ export const studentSchema = z.object({
 });
 export type StudentSchema = z.infer<typeof studentSchema>;
 
-export const examSchema = z.object({
-  id: z.coerce.number().optional(),
-  title: z.string().min(1, { message: "Title is required!" }),
 
-  // FIX: Accepts string from input, converts to Date
-  startTime: z
-    .string()
-    .min(1, "Start time is required!")
-    .transform((v) => new Date(v)),
+export const examFormSchema = z.object({
+  id: z.number().optional(),
+  title: z.string().min(1, "Title is required"),
 
-  endTime: z
-    .string()
-    .min(1, "End time is required!")
-    .transform((v) => new Date(v)),
+  startTime: z.string().min(1, "Start time is required"),
+  endTime: z.string().min(1, "End time is required"),
 
-  // FIX: dropdown returns string → convert to number
-  lessonId: z
-    .string()
-    .min(1, "Lesson is required!")
-    .transform((v) => Number(v)),
+  lessonId: z.string().min(1, "Lesson is required"),
 });
+
+export type ExamFormValues = z.infer<typeof examFormSchema>;
+
+export const examSchema = z.object({
+  id: z.number().optional(),
+  title: z.string(),
+  startTime: z.date(),
+  endTime: z.date(),
+  lessonId: z.number(),
+});
+
 export type ExamSchema = z.infer<typeof examSchema>;
+
+

@@ -4,8 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import InputField from "../InputField";
-import Image from "next/image";
-
+import { useRouter } from "next/navigation";
 
 const schema = z.object({
   username: z.string().min(3).max(20),
@@ -16,16 +15,10 @@ const schema = z.object({
   phone: z.string().min(1),
   address: z.string().min(1),
   bloodType: z.string().min(1),
-
- 
   birthday: z.string().min(1),
-
-  sex: z.enum(["male", "female"]),
-
-
-  img: z
-    .any()
-    .refine((files) => files?.length === 1, "Image is required"),
+  sex: z.enum(["MALE", "FEMALE"]),
+  gradeId: z.string(),
+  classId: z.string(),
 });
 
 type Inputs = z.infer<typeof schema>;
@@ -41,6 +34,8 @@ const StudentForm = ({
   setOpen?: any;
   relatedData?: any;
 }) => {
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
@@ -51,28 +46,33 @@ const StudentForm = ({
       username: data?.username ?? "",
       email: data?.email ?? "",
       password: "",
-      firstName: data?.firstName ?? "",
-      lastName: data?.lastName ?? "",
+      firstName: data?.name ?? "",
+      lastName: data?.surname ?? "",
       phone: data?.phone ?? "",
       address: data?.address ?? "",
       bloodType: data?.bloodType ?? "",
       birthday: data?.birthday
         ? new Date(data.birthday).toISOString().slice(0, 10)
         : "",
-      sex: data?.sex ?? "male",
+      sex: data?.sex ?? "MALE",
+      gradeId: "",
+      classId: "",
     },
   });
 
-  const onSubmit = handleSubmit((formData) => {
-    const file = formData.img[0];
+  const onSubmit = handleSubmit(async (formData) => {
+    const res = await fetch("/api/student", {
+      method: type === "create" ? "POST" : "PUT",
+      body: JSON.stringify(formData),
+    });
 
-    const formatted = {
-      ...formData,
-      birthday: new Date(formData.birthday),
-      img: file,
-    };
+    if (!res.ok) {
+      alert("Failed to save student!");
+      return;
+    }
 
-    console.log("FINAL DATA SENT:", formatted);
+    setOpen(false);
+    router.refresh();
   });
 
   return (
@@ -81,75 +81,66 @@ const StudentForm = ({
         {type === "create" ? "Create a new student" : "Update student"}
       </h1>
 
-      {/* AUTH SECTION */}
+      {/* AUTH INFO */}
       <span className="text-xs text-gray-400 font-medium">
         Authentication Information
       </span>
 
-      <div className="flex justify-between flex-wrap gap-4">
-        <InputField label="Username" name="username" register={register} error={errors.username} />
-        <InputField label="Email" name="email" register={register} error={errors.email} />
-        <InputField
-          label="Password"
-          name="password"
-          type="password"
-          register={register}
-          error={errors.password}
-        />
+      <div className="flex flex-wrap gap-4">
+        <InputField label="Username" name="username" register={register} error={errors.username} required/>
+        <InputField label="Email" name="email" register={register} error={errors.email} required/>
+        <InputField label="Password" name="password" type="password" register={register} error={errors.password} required/>
       </div>
 
-      {/* PERSONAL SECTION */}
+      {/* PERSONAL INFO */}
       <span className="text-xs text-gray-400 font-medium">
         Personal Information
       </span>
 
-      <div className="flex justify-between flex-wrap gap-4">
-        <InputField label="First Name" name="firstName" register={register} error={errors.firstName} />
-        <InputField label="Last Name" name="lastName" register={register} error={errors.lastName} />
-        <InputField label="Phone" name="phone" register={register} error={errors.phone} />
-        <InputField label="Address" name="address" register={register} error={errors.address} />
-        <InputField label="Blood Type" name="bloodType" register={register} error={errors.bloodType} />
+      <div className="flex flex-wrap gap-4">
+        <InputField label="First Name" name="firstName" register={register} error={errors.firstName} required/>
+        <InputField label="Last Name" name="lastName" register={register} error={errors.lastName}/>
+        <InputField label="Phone" name="phone" register={register} error={errors.phone} required/>
+        <InputField label="Address" name="address" register={register} error={errors.address} required/>
+        <InputField label="Blood Type" name="bloodType" register={register} error={errors.bloodType} required/>
 
-        <InputField
-          label="Birthday"
-          name="birthday"
-          type="date"
-          register={register}
-          error={errors.birthday}
-        />
+        <InputField label="Birthday" name="birthday" type="date" register={register} error={errors.birthday} required/>
 
         {/* SEX */}
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <div className="flex flex-col w-full md:w-1/3">
           <label className="text-xs text-gray-500">Sex</label>
-          <select
-            {...register("sex")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md"
-          >
-            <option value="male">Male</option>
-            <option value="female">Female</option>
+          <select {...register("sex")} className="ring-[1.5px] ring-gray-300 p-2 rounded-md">
+            <option value="MALE">Male</option>
+            <option value="FEMALE">Female</option>
           </select>
-          {errors.sex && <p className="text-xs text-red-400">{errors.sex.message}</p>}
         </div>
 
-        {/* IMAGE */}
-        <div className="flex flex-col gap-2 w-full md:w-1/4 justify-center">
-          <label
-            htmlFor="img"
-            className="text-xs text-gray-500 flex items-center gap-2 cursor-pointer"
-          >
-            <Image src="/upload.png" width={24} height={24} alt="" />
-            Upload a photo
-          </label>
+        {/* GRADE */}
+        <div className="flex flex-col w-full md:w-1/3">
+          <label className="text-xs text-gray-500">Grade</label>
+          <select {...register("gradeId")} className="ring-[1.5px] ring-gray-300 p-2 rounded-md">
+            {relatedData.grades.map((g: any) => (
+              <option key={g.id} value={g.id}>
+                Grade {g.level}
+              </option>
+            ))}
+          </select>
+        </div>
 
-          <input type="file" id="img" {...register("img")} className="hidden" />
-
-          {errors.img && (
-            <p className="text-xs text-red-400">{errors.img.message?.toString()}</p>
-          )}
+        {/* CLASS */}
+        <div className="flex flex-col w-full md:w-1/3">
+          <label className="text-xs text-gray-500">Class</label>
+          <select {...register("classId")} className="ring-[1.5px] ring-gray-300 p-2 rounded-md">
+            {relatedData.classes.map((cls: any) => (
+              <option key={cls.id} value={cls.id}>
+                {cls.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      <button className="bg-blue-400 text-white p-2 rounded-md">
+      <button className="bg-blue-500 text-white py-2 rounded-md">
         {type === "create" ? "Create" : "Update"}
       </button>
     </form>

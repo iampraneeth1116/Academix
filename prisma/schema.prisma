@@ -93,7 +93,7 @@ model Teacher {
 }
 
 model TeacherSubject {
-  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   teacherId String
   subject   Subject @relation(fields: [subjectId], references: [id])
   subjectId Int
@@ -133,8 +133,8 @@ model Class {
   name     String @unique
   capacity Int
 
-  supervisorId  String?
-  supervisor    Teacher?       @relation(fields: [supervisorId], references: [id])
+  supervisor   Teacher? @relation(fields: [supervisorId], references: [id], onDelete: SetNull)
+  supervisorId String?
   lessons       Lesson[]
   students      Student[]
   gradeId       Int
@@ -154,8 +154,8 @@ model Lesson {
   subject     Subject      @relation(fields: [subjectId], references: [id])
   classId     Int
   class       Class        @relation(fields: [classId], references: [id])
-  teacherId   String
-  teacher     Teacher      @relation(fields: [teacherId], references: [id])
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId String
   exams       Exam[]
   assignments Assignment[]
   attendances Attendance[]
@@ -168,7 +168,7 @@ model Exam {
   endTime   DateTime
 
   lessonId Int
-  lesson   Lesson   @relation(fields: [lessonId], references: [id])
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   results  Result[]
 }
 
@@ -179,7 +179,7 @@ model Assignment {
   dueDate   DateTime
 
   lessonId Int
-  lesson   Lesson   @relation(fields: [lessonId], references: [id])
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   results  Result[]
 }
 
@@ -188,9 +188,10 @@ model Result {
   score Int
 
   examId       Int?
-  exam         Exam?       @relation(fields: [examId], references: [id])
+  exam Exam? @relation(fields: [examId], references: [id], onDelete: Cascade)
+  assignment Assignment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
   assignmentId Int?
-  assignment   Assignment? @relation(fields: [assignmentId], references: [id])
   studentId    String
   student      Student     @relation(fields: [studentId], references: [id])
 }
@@ -203,7 +204,7 @@ model Attendance {
   studentId String
   student   Student @relation(fields: [studentId], references: [id])
   lessonId  Int
-  lesson    Lesson  @relation(fields: [lessonId], references: [id])
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 }
 
 model Event {

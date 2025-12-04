@@ -9,6 +9,7 @@ type InputFieldProps = {
   error?: FieldError | Merge<FieldError, FieldErrorsImpl<any>> | undefined;
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
   hidden?: boolean;
+  required?: boolean; // <<< ADDED
 };
 
 const InputField = ({
@@ -20,6 +21,7 @@ const InputField = ({
   error,
   inputProps,
   hidden = false,
+  required = false,  // <<< ADDED
 }: InputFieldProps) => {
   if (hidden) {
     return <input type="hidden" {...register(name)} defaultValue={defaultValue} />;
@@ -27,7 +29,10 @@ const InputField = ({
 
   return (
     <div className="flex flex-col gap-2 w-full md:w-1/4">
-      <label className="text-xs text-gray-500">{label}</label>
+      <label className="text-xs text-gray-500">
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>} {/* <<< ASHTERICK */}
+      </label>
 
       <input
         type={type}

@@ -1,8 +1,10 @@
+// components/FormModal.tsx
 "use client";
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { JSX, Dispatch, SetStateAction, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const TeacherForm = dynamic(() => import("./forms/TeacherForm"));
 const StudentForm = dynamic(() => import("./forms/StudentForm"));
@@ -24,7 +26,6 @@ const forms: Record<
   ),
   student: (type, data, setOpen, relatedData) => (
     <StudentForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
-    
   ),
   subject: (type, data, setOpen, relatedData) => (
     <SubjectForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
@@ -51,18 +52,42 @@ const FormModal = ({
   relatedData?: any;
 }) => {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+
+  const handleDelete = async () => {
+    if (!id) return;
+
+    try {
+      const res = await fetch(`/api/${table}/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        alert("Delete failed!");
+        return;
+      }
+
+      setOpen(false);
+      router.refresh(); // refresh the page to show updated list
+    } catch (err) {
+      console.log("Delete error:", err);
+    }
+  };
 
   const Form = () => {
     if (type === "delete" && id) {
       return (
-        <form className="p-4 flex flex-col gap-4">
+        <div className="p-4 flex flex-col gap-4">
           <span className="text-center font-medium">
             All data will be lost. Are you sure you want to delete this {table}?
           </span>
-          <button className="bg-red-700 text-white py-2 px-4 rounded-md w-max self-center">
+          <button
+            onClick={handleDelete}
+            className="bg-red-600 text-white py-2 px-4 rounded-md mx-auto"
+          >
             Delete
           </button>
-        </form>
+        </div>
       );
     }
 
@@ -87,6 +112,7 @@ const FormModal = ({
         <div className="w-screen h-screen absolute inset-0 bg-black/60 z-50 flex items-center justify-center">
           <div className="bg-white p-4 rounded-md relative w-[90%] md:w-[60%] lg:w-[40%]">
             <Form />
+
             <div
               className="absolute top-4 right-4 cursor-pointer"
               onClick={() => setOpen(false)}

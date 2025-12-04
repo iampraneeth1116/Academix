@@ -1,3 +1,4 @@
+// components/FormContainer.tsx
 import prisma from "@/lib/prisma";
 import FormModal from "./FormModal";
 
@@ -30,7 +31,7 @@ const FormContainer = async ({
   role = "guest",
   currentUserId = null,
 }: FormContainerProps) => {
-  let relatedData = {};
+  let relatedData: any = {};
 
   if (type !== "delete") {
     switch (table) {
@@ -71,10 +72,26 @@ const FormContainer = async ({
         break;
 
       case "exam":
+        // For exam form we need subjects + lessons
         relatedData = {
-          lessons: await prisma.lesson.findMany({
-            where: role === "teacher" ? { teacherId: currentUserId! } : {},
+          subjects: await prisma.subject.findMany({
             select: { id: true, name: true },
+            orderBy: { name: "asc" },
+          }),
+          lessons: await prisma.lesson.findMany({
+            // If the user is a teacher, limit lessons to their lessons
+            where: role === "teacher" && currentUserId ? { teacherId: currentUserId } : {},
+            select: {
+              id: true,
+              name: true,
+              day: true,
+              startTime: true,
+              endTime: true,
+              subjectId: true,
+              classId: true,
+              teacherId: true,
+            },
+            orderBy: { name: "asc" },
           }),
         };
         break;

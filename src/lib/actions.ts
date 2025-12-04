@@ -396,10 +396,7 @@ export const deleteStudent = async (
 
 
 
-export const createExam = async (
-  currentState: CurrentState,
-  data: ExamSchema
-) => {
+export const createExam = async (_state: any, data: any) => {
   try {
     await prisma.exam.create({
       data: {
@@ -412,15 +409,13 @@ export const createExam = async (
 
     return { success: true, error: false };
   } catch (err) {
-    console.error(err);
+    console.error("CREATE EXAM ERROR:", err);
     return { success: false, error: true };
   }
 };
 
-export const updateExam = async (
-  currentState: CurrentState,
-  data: ExamSchema
-) => {
+
+export const updateExam = async (_state: any, data: any) => {
   try {
     await prisma.exam.update({
       where: { id: data.id },
@@ -434,10 +429,11 @@ export const updateExam = async (
 
     return { success: true, error: false };
   } catch (err) {
-    console.error(err);
+    console.error("UPDATE EXAM ERROR:", err);
     return { success: false, error: true };
   }
 };
+
 
 export const deleteExam = async (
   currentState: CurrentState,
