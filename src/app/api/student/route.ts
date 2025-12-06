@@ -1,80 +1,39 @@
+// app/api/student/route.ts
 import prisma from "@/lib/prisma";
-import { NextResponse } from "next/server";
-import { randomUUID } from "crypto";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+    // Generate id if not provided (use Node's crypto)
+    const id = body.id || (typeof crypto !== "undefined" && (crypto as any).randomUUID ? (crypto as any).randomUUID() : `s_${Date.now()}`);
 
-    // -----------------------------
-    // 1️⃣ Validate class & grade
-    // -----------------------------
-    const cls = await prisma.class.findUnique({
-      where: { id: Number(body.classId) },
-    });
-
-    const grade = await prisma.grade.findUnique({
-      where: { id: Number(body.gradeId) },
-    });
-
-    if (!cls)
-      return NextResponse.json({ error: "Class not found" }, { status: 400 });
-
-    if (!grade)
-      return NextResponse.json({ error: "Grade not found" }, { status: 400 });
-
-    // -----------------------------
-    // 2️⃣ Get default parent
-    // -----------------------------
-    const defaultParent = await prisma.parent.findFirst();
-
-    if (!defaultParent) {
-      return NextResponse.json(
-        { error: "A parent record is required but none exists." },
-        { status: 400 }
-      );
+    // Validate minimal fields (you can extend)
+    if (!body.username || !body.name) {
+      return new Response("Missing required fields", { status: 400 });
     }
 
-    // -----------------------------
-    // 3️⃣ Create student
-    // -----------------------------
     const student = await prisma.student.create({
       data: {
-        id: randomUUID(),
+        id,
         username: body.username,
-        name: body.firstName,
-        surname: body.lastName,
-        email: body.email,
-        phone: body.phone,
-        address: body.address,
-        bloodType: body.bloodType,
-        sex: body.sex,
-        birthday: new Date(body.birthday),
-        classId: Number(body.classId),
-        gradeId: Number(body.gradeId),
-        parentId: defaultParent.id, // ✅ REQUIRED FIX
+        name: body.name,
+        surname: body.surname ?? "",
+        email: body.email ?? null,
+        phone: body.phone ?? null,
+        address: body.address ?? "",
+        img: body.img ?? null,
+        bloodType: body.bloodType ?? "",
+        sex: body.sex ?? "MALE",
+        parentId: body.parentId ?? "", // adjust if required
+        classId: body.classId ? parseInt(body.classId) : body.classId,
+        gradeId: body.gradeId ? parseInt(body.gradeId) : body.gradeId,
+        birthday: body.birthday ? new Date(body.birthday) : new Date(),
       },
     });
 
-    // -----------------------------
-    // 4️⃣ Create student login
-    // -----------------------------
-    await prisma.userLogin.create({
-      data: {
-        username: body.username,
-        password: body.password,
-        role: "STUDENT",
-        userId: student.id,
-        userType: "STUDENT",
-      },
-    });
-
-    return NextResponse.json({ success: true, student });
-  } catch (error) {
-    console.log("CREATE STUDENT ERROR:", error);
-    return NextResponse.json(
-      { error: "Failed to create student" },
-      { status: 500 }
-    );
+    return new Response(JSON.stringify(student), { status: 201 });
+  } catch (e: any) {
+    console.error("Create student error:", e);
+    return new Response(String(e.message || e), { status: 500 });
   }
 }

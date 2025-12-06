@@ -24,7 +24,6 @@ const AdminPage = async ({
           <UserCard type="admin" />
           <UserCard type="teacher" />
           <UserCard type="student" />
-          <UserCard type="parent" />
         </div>
 
         {/* CHARTS */}

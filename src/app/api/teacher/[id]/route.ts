@@ -1,30 +1,45 @@
 // app/api/teacher/[id]/route.ts
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-export async function DELETE(req: NextRequest, context: { params: Promise<{ id?: string }> }) {
+export async function DELETE(
+  req: NextRequest,
+  context:
+    | { params: { id: string } }
+    | { params: Promise<{ id: string }> }
+) {
   try {
-    // IMPORTANT: params is a Promise in Next.js dynamic API routes — await it.
-    const { id } = await context.params;
+    // Unwrap params if it's a Promise (Next.js 15 behavior)
+    const resolved =
+      typeof (context.params as any)?.then === "function"
+        ? await (context.params as any)
+        : context.params;
 
+    const id = resolved.id;
     if (!id) {
-      return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Missing id" },
+        { status: 400 }
+      );
     }
 
-    // delete by id (your schema uses String ids)
-    const deleted = await prisma.teacher.delete({
+    // delete login first
+    await prisma.userLogin.deleteMany({
+      where: { userId: id },
+    });
+
+    // delete teacher
+    await prisma.teacher.delete({
       where: { id },
     });
 
-    return NextResponse.json({ success: true, deleted }, { status: 200 });
-  } catch (error: any) {
-    // Prisma known-not-found error code when trying to delete a non-existent record
-    if (error?.code === "P2025") {
-      return NextResponse.json({ error: "Teacher not found" }, { status: 404 });
-    }
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Teacher delete error:", err);
 
-    console.error("Delete teacher error:", error);
-    return NextResponse.json({ error: "Failed to delete teacher" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to delete teacher" },
+      { status: 500 }
+    );
   }
 }

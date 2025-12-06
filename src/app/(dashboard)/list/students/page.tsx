@@ -92,7 +92,9 @@ const StudentListPage = async ({
   // ============================
   // PAGINATION & SEARCH LOGIC
   // ============================
-  const { page, ...queryParams } = searchParams;
+  const resolvedParams = await searchParams;
+  const { page, ...queryParams } = resolvedParams;
+
 
   const p = page ? parseInt(page) : 1;
 

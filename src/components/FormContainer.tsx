@@ -54,6 +54,30 @@ const FormContainer = async ({
         };
         break;
 
+      case "assignment":
+        relatedData = {
+          subjects: await prisma.subject.findMany({
+            select: { id: true, name: true },
+            orderBy: { name: "asc" },
+          }),
+          lessons: await prisma.lesson.findMany({
+            where: role === "teacher" && currentUserId ? { teacherId: currentUserId } : {},
+            select: {
+              id: true,
+              name: true,
+              day: true,
+              startTime: true,
+              endTime: true,
+              subjectId: true,
+              classId: true,
+              teacherId: true,
+            },
+            orderBy: { name: "asc" },
+          }),
+        };
+        break;
+
+
       case "teacher":
         relatedData = {
           subjects: await prisma.subject.findMany({
@@ -65,11 +89,10 @@ const FormContainer = async ({
       case "student":
         relatedData = {
           grades: await prisma.grade.findMany({ select: { id: true, level: true } }),
-          classes: await prisma.class.findMany({
-            include: { _count: { select: { students: true } } },
-          }),
+          classes: await prisma.class.findMany({ select: { id: true, name: true } }),
         };
         break;
+
 
       case "exam":
         // For exam form we need subjects + lessons
