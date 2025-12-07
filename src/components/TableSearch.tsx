@@ -1,39 +1,32 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 
 const TableSearch = () => {
   const params = useSearchParams();
   const router = useRouter();
 
-  // Get initial search from URL
-  const initialSearch = params.get("search") || "";
-  const [value, setValue] = useState(initialSearch);
+  const [value, setValue] = useState(params.get("search") || "");
 
   useEffect(() => {
-    const delay = setTimeout(() => {
-      const newParams = new URLSearchParams(params.toString());
+    const timeout = setTimeout(() => {
+      const p = new URLSearchParams(params.toString());
 
-      if (value.trim() === "") {
-        newParams.delete("search");
-      } else {
-        newParams.set("search", value);
-      }
+      if (!value.trim()) p.delete("search");
+      else p.set("search", value);
 
-      newParams.delete("page"); // reset to page 1 on new search
+      p.delete("page");
+      router.push(`?${p.toString()}`);
+    }, 400);
 
-      router.push(`?${newParams.toString()}`);
-    }, 300); // debounce duration
-
-    return () => clearTimeout(delay);
+    return () => clearTimeout(timeout);
   }, [value]);
 
   return (
     <input
-      type="text"
-      placeholder="Search teacher name..."
-      className="px-3 py-2 border rounded-md text-sm"
+      className="border px-3 py-2 rounded"
+      placeholder="Search..."
       value={value}
       onChange={(e) => setValue(e.target.value)}
     />

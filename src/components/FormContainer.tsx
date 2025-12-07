@@ -138,6 +138,15 @@ const FormContainer = async ({
           };
           break;
 
+      case "lesson":
+        relatedData = {
+          subjects: await prisma.subject.findMany(),
+          classes: await prisma.class.findMany(),
+          teachers: await prisma.teacher.findMany(),
+        };
+        break;
+
+
 
       case "result":
         relatedData = {

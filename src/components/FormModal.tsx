@@ -15,6 +15,7 @@ const ExamForm = dynamic(() => import("./forms/ExamForm"));
 const ResultForm = dynamic(() => import("./forms/ResultForm"));
 const AnnouncementForm = dynamic(() => import("./forms/AnnouncementForm"));
 const EventForm = dynamic(() => import("./forms/EventForm"));
+const LessonForm = dynamic(() => import("./forms/LessonForm"));
 
 
 // --- TABLE → FORM MAP ---
@@ -56,10 +57,14 @@ const forms: Record<
   result: (type, data, setOpen, relatedData) => (
     <ResultForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
   ),
-  
+
   event: (type, data, setOpen, relatedData) => (
     <EventForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
   ),
+  lesson: (type, data, setOpen, relatedData) => (
+    <LessonForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
+  ),
+
 
 };
 

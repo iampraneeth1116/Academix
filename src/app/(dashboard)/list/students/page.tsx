@@ -2,23 +2,27 @@ import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
+import StudentFilterDropdown from "@/components/StudentFilterDropdown";
+import TableSortDropdown from "@/components/TableSortDropdown";
 
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { Class, Prisma, Student } from "@prisma/client";
+import { Class, Grade, Prisma, Student } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
-type StudentList = Student & { class: Class };
+type StudentList = Student & { class: Class; grade: Grade };
 
 const StudentListPage = async ({
   searchParams,
 }: {
   searchParams: { [key: string]: string | undefined };
 }) => {
+  const classes = await prisma.class.findMany();
+  const grades = await prisma.grade.findMany();
 
   const cookieStore = await cookies();
   const token = cookieStore.get("accessToken")?.value;
@@ -29,14 +33,11 @@ const StudentListPage = async ({
     try {
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
       role = decoded.role || "GUEST";
-    } catch (e) {
+    } catch {
       role = "GUEST";
     }
   }
 
-  // ============================
-  // TABLE COLUMNS
-  // ============================
   const columns = [
     { header: "Info", accessor: "info" },
     { header: "Student ID", accessor: "studentId", className: "hidden md:table-cell" },
@@ -46,9 +47,6 @@ const StudentListPage = async ({
     ...(role === "ADMIN" ? [{ header: "Actions", accessor: "action" }] : []),
   ];
 
-  // ============================
-  // RENDER ROW
-  // ============================
   const renderRow = (item: StudentList) => (
     <tr
       key={item.id}
@@ -69,7 +67,7 @@ const StudentListPage = async ({
       </td>
 
       <td className="hidden md:table-cell">{item.username}</td>
-      <td className="hidden md:table-cell">{item.class.name}</td>
+      <td className="hidden md:table-cell">{item.grade.level}</td>
       <td className="hidden md:table-cell">{item.phone}</td>
       <td className="hidden md:table-cell">{item.address}</td>
 
@@ -89,43 +87,47 @@ const StudentListPage = async ({
     </tr>
   );
 
-  // ============================
-  // PAGINATION & SEARCH LOGIC
-  // ============================
-  const resolvedParams = await searchParams;
-  const { page, ...queryParams } = resolvedParams;
-
-
-  const p = page ? parseInt(page) : 1;
+  const { page, search, classId, gradeId, sort } = await searchParams;
+  const p = page ? Number(page) : 1;
 
   const query: Prisma.StudentWhereInput = {};
 
-  for (const [key, value] of Object.entries(queryParams)) {
-    if (!value) continue;
-
-    switch (key) {
-      case "teacherId":
-        query.class = {
-          lessons: { some: { teacherId: value } },
-        };
-        break;
-
-      case "search":
-        query.OR = [
-          { name: { contains: value }},
-          { surname: { contains: value }},
-          { username: { contains: value } },
-        ];
-        break;
-    }
+  if (search) {
+    query.name = { contains: search };
   }
 
+  if (classId) {
+    query.classId = Number(classId);
+  }
+
+  if (gradeId) {
+    query.gradeId = Number(gradeId);
+  }
+
+  let orderBy: any = undefined;
+
+  switch (sort) {
+    case "name_asc":
+      orderBy = { name: "asc" };
+      break;
+    case "name_desc":
+      orderBy = { name: "desc" };
+      break;
+    case "newest":
+      orderBy = { createdAt: "desc" };
+      break;
+    case "oldest":
+      orderBy = { createdAt: "asc" };
+      break;
+  }
 
   const [data, count] = await prisma.$transaction([
     prisma.student.findMany({
       where: query,
+      orderBy,
       include: {
         class: true,
+        grade: true,
       },
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
@@ -133,34 +135,27 @@ const StudentListPage = async ({
     prisma.student.count({ where: query }),
   ]);
 
-
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
-      {/* TOP BAR */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Students</h1>
 
-        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+        <div className="flex items-center gap-4">
           <TableSearch />
-
-          <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-aYellow">
-              <Image src="/filter.png" alt="filter" width={14} height={14} />
-            </button>
-
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-aYellow">
-              <Image src="/sort.png" alt="sort" width={14} height={14} />
-            </button>
-
-            {role === "ADMIN" && <FormContainer table="student" type="create" />}
-          </div>
+          <StudentFilterDropdown classes={classes} grades={grades} />
+          <TableSortDropdown />
+          {role === "ADMIN" && <FormContainer table="student" type="create" />}
         </div>
       </div>
 
-      {/* TABLE */}
-      <Table columns={columns} renderRow={renderRow} data={data} />
+      {data.length === 0 ? (
+        <div className="w-full py-10 text-center text-gray-500 font-medium">
+          No Data Found
+        </div>
+      ) : (
+        <Table columns={columns} renderRow={renderRow} data={data} />
+      )}
 
-      {/* PAGINATION */}
       <Pagination page={p} count={count} />
     </div>
   );

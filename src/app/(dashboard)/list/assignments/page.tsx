@@ -2,14 +2,16 @@ import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
+import AssignmentFilterDropdown from "@/components/AssignmentFilterDropdown";
+import AssignmentSortDropdown from "@/components/AssignmentSortDropdown";
+
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Assignment, Class, Prisma, Subject, Teacher } from "@prisma/client";
-import Image from "next/image";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
-// Assignment row type
+// ---------------- TYPES ---------------- //
 type AssignmentList = Assignment & {
   lesson: {
     subject: Subject;
@@ -34,14 +36,19 @@ async function getUserFromJWT() {
     return null;
   }
 }
-// ------------------------------------------- //
 
-const AssignmentListPage = async ({ searchParams }: any) => {
+export default async function AssignmentListPage({ searchParams }: any) {
+  const params = await searchParams;
+
   const user = await getUserFromJWT();
-  const role = user?.role?.toUpperCase() ?? "GUEST";
-  const currentUserId = user?.userId ?? null;
+  const role = (user?.role || "GUEST").toUpperCase();
+  const currentUserId = user?.userId || null;
 
-  // ---------------- TABLE COLUMNS ---------------- //
+  const subjects = await prisma.subject.findMany();
+  const classes = await prisma.class.findMany();
+  const teachers = await prisma.teacher.findMany();
+
+  // ---------------- COLUMNS ---------------- //
   const columns = [
     { header: "Title", accessor: "title" },
     { header: "Subject", accessor: "subject" },
@@ -53,136 +60,125 @@ const AssignmentListPage = async ({ searchParams }: any) => {
       : []),
   ];
 
-  // ---------------- RENDER ROW ---------------- //
+  // ---------------- ROW ---------------- //
   const renderRow = (item: AssignmentList) => (
-    <tr
-      key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-    >
-      <td>{item.title}</td>
-
-      <td className="flex items-center gap-4 p-4">
-        {item.lesson.subject.name}
-      </td>
-
+    <tr key={item.id} className="border-b border-gray-200 text-sm hover:bg-aPurpleLight">
+      <td className="p-4">{item.title}</td>
+      <td>{item.lesson.subject.name}</td>
       <td>{item.lesson.class.name}</td>
-
       <td className="hidden md:table-cell">
         {item.lesson.teacher.name} {item.lesson.teacher.surname}
       </td>
-
       <td className="hidden md:table-cell">
         {new Intl.DateTimeFormat("en-US").format(item.dueDate)}
       </td>
 
-      <td>
-        {(role === "ADMIN" || role === "TEACHER") && (
-          <div className="flex items-center gap-2">
+      {(role === "ADMIN" || role === "TEACHER") && (
+        <td>
+          <div className="flex gap-2">
             <FormContainer table="assignment" type="update" data={item} currentUserId={currentUserId} />
             <FormContainer table="assignment" type="delete" id={item.id.toString()} currentUserId={currentUserId} />
           </div>
-        )}
-      </td>
+        </td>
+      )}
     </tr>
   );
 
-  // ---------------- PAGINATION ---------------- //
-  const { page, ...filters } = searchParams;
-  const p = page ? parseInt(page) : 1;
+  // ---------------- PARAMS ---------------- //
+  const search = params.search;
+  const subjectId = params.subjectId;
+  const classId = params.classId;
+  const teacherId = params.teacherId;
+  const sort = params.sort;
 
-  // ---------------- FILTERS ---------------- //
-// ---------------- FILTERS ---------------- //
-const query: Prisma.AssignmentWhereInput = {
-  lesson: {} as Prisma.LessonWhereInput,
-};
+  const page = params.page ? Number(params.page) : 1;
 
-for (const [key, value] of Object.entries(filters)) {
-  if (!value) continue;
+  // ---------------- QUERY ---------------- //
+  const query: Prisma.AssignmentWhereInput = {
+    lesson: {},
+  };
 
-  switch (key) {
-    case "classId":
-      query.lesson!.classId = parseInt(value as string);
-      break;
-
-    case "teacherId":
-      query.lesson!.teacherId = value as string;
-      break;
-
-    case "search":
-      query.lesson!.subject = {
-        name: {
-          contains: value as string,   // <-- FIXED
-          mode: "insensitive",
-        },
-      } as Prisma.SubjectWhereInput;
-      break;
-  }
-}
-
-
-
-  // ---------------- ROLE RESTRICTIONS ---------------- //
-  if (role === "TEACHER") {
-    query.lesson!.teacherId = currentUserId!;
+  if (search) {
+    query.OR = [
+      { title: { contains: search } },
+      { lesson: { subject: { name: { contains: search } } } },
+      { lesson: { class: { name: { contains: search } } } },
+      { lesson: { teacher: { name: { contains: search } } } },
+    ];
   }
 
+  if (subjectId) query.lesson!.subjectId = Number(subjectId);
+  if (classId) query.lesson!.classId = Number(classId);
+  if (teacherId) query.lesson!.teacherId = teacherId;
+
+  // ROLE restrictions
+  if (role === "TEACHER") query.lesson!.teacherId = currentUserId!;
   if (role === "STUDENT") {
-    query.lesson!.class = {
-      students: { some: { id: currentUserId! } },
-    };
+    query.lesson!.class = { students: { some: { id: currentUserId! } } };
   }
-
   if (role === "PARENT") {
-    query.lesson!.class = {
-      students: { some: { parentId: currentUserId! } },
-    };
+    query.lesson!.class = { students: { some: { parentId: currentUserId! } } };
   }
 
-  // ---------------- DB QUERY ---------------- //
+  // ---------------- SORT ---------------- //
+  let orderBy: any = undefined;
+
+  switch (sort) {
+    case "title_asc":
+      orderBy = { title: "asc" };
+      break;
+
+    case "title_desc":
+      orderBy = { title: "desc" };
+      break;
+
+    case "newest":
+      orderBy = { dueDate: "desc" };
+      break;
+
+    case "oldest":
+      orderBy = { dueDate: "asc" };
+      break;
+  }
+
+  // ---------------- DB ---------------- //
   const [data, count] = await prisma.$transaction([
     prisma.assignment.findMany({
       where: query,
+      orderBy,
       include: {
-        lesson: { include: { subject: true, teacher: true, class: true } },
+        lesson: { include: { subject: true, class: true, teacher: true } },
       },
       take: ITEM_PER_PAGE,
-      skip: ITEM_PER_PAGE * (p - 1),
+      skip: ITEM_PER_PAGE * (page - 1),
     }),
     prisma.assignment.count({ where: query }),
   ]);
 
   return (
-    <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
-      {/* TOP BAR */}
-      <div className="flex items-center justify-between">
+    <div className="bg-white p-4 rounded-md m-4 mt-0">
+      <div className="flex justify-between items-center">
+
         <h1 className="hidden md:block text-lg font-semibold">All Assignments</h1>
 
-        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+        <div className="flex items-center gap-4">
           <TableSearch />
+          <AssignmentFilterDropdown subjects={subjects} classes={classes} teachers={teachers} />
+          <AssignmentSortDropdown />
 
-          <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/filter.png" alt="filter" width={14} height={14} />
-            </button>
-
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/sort.png" alt="sort" width={14} height={14} />
-            </button>
-
-            {(role === "ADMIN" || role === "TEACHER") && (
-              <FormContainer table="assignment" type="create" currentUserId={currentUserId} />
-            )}
-          </div>
+          {(role === "ADMIN" || role === "TEACHER") && (
+            <FormContainer table="assignment" type="create" currentUserId={currentUserId} />
+          )}
         </div>
       </div>
 
-      {/* TABLE */}
-      <Table columns={columns} renderRow={renderRow} data={data} />
+      {data.length === 0 ? (
+        <div className="text-center py-10 text-gray-500">No Data Found</div>
+      ) : (
+        <Table columns={columns} renderRow={renderRow} data={data} />
+      )}
 
-      {/* PAGINATION */}
-      <Pagination page={p} count={count} />
+      <Pagination page={page} count={count} />
     </div>
   );
-};
-
-export default AssignmentListPage;
+}

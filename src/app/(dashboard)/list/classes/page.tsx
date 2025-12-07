@@ -2,145 +2,137 @@ import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
+import TableFilterDropdown from "@/components/ClassFilterDropdown";
+import TableSortDropdown from "@/components/TableSortDropdown";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { Class, Prisma, Teacher } from "@prisma/client";
+import { Class, Prisma, Teacher, Grade } from "@prisma/client";
 import Image from "next/image";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
-type ClassList = Class & { supervisor: Teacher | null };
+type ClassList = Class & { supervisor: Teacher | null; grade: Grade };
 
-// ---------------- JWT AUTH ---------------- //
 async function getUserFromJWT() {
   const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value;
-
+  const token = cookieStore.get("accessToken")?.value;
   if (!token) return null;
 
   try {
-    return jwt.verify(token, process.env.JWT_SECRET!) as {
-      userId: string;
-      role: string;
-    };
+    return jwt.verify(token, process.env.JWT_SECRET!) as { role: string };
   } catch {
     return null;
   }
 }
-// ------------------------------------------- //
 
-const ClassListPage = async ({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | undefined };
-}) => {
+const ClassListPage = async ({ searchParams }: any) => {
+  const params = await searchParams;
 
   const user = await getUserFromJWT();
-  const role = user?.role;
+  const role = user?.role?.toUpperCase() || "GUEST";
 
-  // ------------ TABLE COLUMNS ------------ //
+  const supervisors = await prisma.teacher.findMany();
+  const grades = await prisma.grade.findMany();
+
   const columns = [
     { header: "Class Name", accessor: "name" },
     { header: "Capacity", accessor: "capacity", className: "hidden md:table-cell" },
     { header: "Grade", accessor: "grade", className: "hidden md:table-cell" },
     { header: "Supervisor", accessor: "supervisor", className: "hidden md:table-cell" },
-    ...(role === "admin" ? [{ header: "Actions", accessor: "action" }] : []),
+    ...(role === "ADMIN" ? [{ header: "Actions", accessor: "action" }] : []),
   ];
 
-  // ------------ TABLE ROW ------------ //
   const renderRow = (item: ClassList) => (
-    <tr
-      key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-    >
-      <td className="flex items-center gap-4 p-4">{item.name}</td>
+    <tr key={item.id} className="border-b border-gray-200 even:bg-slate-50 text-sm">
+      <td className="p-4">{item.name}</td>
 
       <td className="hidden md:table-cell">{item.capacity}</td>
 
-      {/* FIXED GRADE DISPLAY */}
-      <td className="hidden md:table-cell">{item.gradeId}</td>
+      <td className="hidden md:table-cell">{item.grade.level}</td>
 
-      {/* SUPERVISOR */}
       <td className="hidden md:table-cell">
-        {item.supervisor
-          ? `${item.supervisor.name} ${item.supervisor.surname}`
-          : "-"}
+        {item.supervisor ? `${item.supervisor.name} ${item.supervisor.surname}` : "-"}
       </td>
 
-      <td>
-        {role === "admin" && (
+      {role === "ADMIN" && (
+        <td>
           <div className="flex items-center gap-2">
             <FormContainer table="class" type="update" data={item} />
             <FormContainer table="class" type="delete" id={item.id} />
           </div>
-        )}
-      </td>
+        </td>
+      )}
     </tr>
   );
 
-  // ------------ PAGINATION ------------ //
-  const { page, ...queryParams } = searchParams;
-  const p = page ? parseInt(page) : 1;
+  const search = params.search;
+  const gradeId = params.gradeId;
+  const supervisorId = params.supervisorId;
+  const sort = params.sort;
+  const page = params.page ? Number(params.page) : 1;
 
-  // ------------ FILTERS ------------ //
   const query: Prisma.ClassWhereInput = {};
 
-  if (queryParams.supervisorId) {
-    query.supervisorId = queryParams.supervisorId;
+  if (search) {
+    query.name = { contains: search };
   }
 
-  if (queryParams.search) {
-    query.name = {
-      contains: queryParams.search,
-      mode: "insensitive",
-    } as any;
+  if (gradeId) query.gradeId = Number(gradeId);
+
+  if (supervisorId) query.supervisorId = supervisorId;
+
+  let orderBy: any = undefined;
+
+  switch (sort) {
+    case "name_asc":
+      orderBy = { name: "asc" };
+      break;
+    case "name_desc":
+      orderBy = { name: "desc" };
+      break;
+    case "newest":
+      orderBy = { createdAt: "desc" };
+      break;
+    case "oldest":
+      orderBy = { createdAt: "asc" };
+      break;
   }
 
-  // ------------ DB QUERY ------------ //
   const [data, count] = await prisma.$transaction([
     prisma.class.findMany({
       where: query,
-      include: {
-        supervisor: true,
-        grade: true,
-      },
+      orderBy,
+      include: { supervisor: true, grade: true },
       take: ITEM_PER_PAGE,
-      skip: ITEM_PER_PAGE * (p - 1),
+      skip: ITEM_PER_PAGE * (page - 1),
     }),
 
     prisma.class.count({ where: query }),
   ]);
 
-  // ------------ UI RENDER ------------ //
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
-
-      {/* TOP BAR */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Classes</h1>
 
-        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+        <div className="flex items-center gap-4">
           <TableSearch />
+          <TableFilterDropdown supervisors={supervisors} grades={grades} />
+          <TableSortDropdown />
 
-          <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
-
-            {role === "admin" && <FormContainer table="class" type="create" />}
-          </div>
+          {role === "ADMIN" && (
+            <FormContainer table="class" type="create" />
+          )}
         </div>
       </div>
 
-      {/* TABLE */}
-      <Table columns={columns} renderRow={renderRow} data={data} />
+      {data.length === 0 ? (
+        <div className="w-full py-10 text-center text-gray-500">No Data Found</div>
+      ) : (
+        <Table columns={columns} renderRow={renderRow} data={data} />
+      )}
 
-      {/* PAGINATION */}
-      <Pagination page={p} count={count} />
+      <Pagination page={page} count={count} />
     </div>
   );
 };
