@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Academix – Admin Dashboard
 
-## Getting Started
+Academix is a school management system built using Next.js, Prisma, MySQL, and TailwindCSS.  
+This version of the project includes **Admin-only functionality**. Admins can manage Teachers, Students, Classes, Subjects, Lessons, Exams, Events, Announcements, Assignments, and Results.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Features (Admin Only)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 🔐 Authentication
+- Admin login using username & password
+- JWT authentication (stored in HTTP-only cookies)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🧑‍🏫 Teacher Management
+- Create, edit, delete teachers  
+- Assign subjects to teachers  
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 🎓 Student Management
+- Add & update student details  
+- Select grade, class, parent  
+- Supports attendance and results linking
 
-## Learn More
+### 📚 Subject Management
+- Add, update, delete subjects  
+- Auto-load teacher list
 
-To learn more about Next.js, take a look at the following resources:
+### 🏫 Class Management
+- Create classes  
+- Assign supervisor teacher  
+- Automatically loads grade list
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 📘 Lessons
+- Admin can:
+  - Add lesson name  
+  - Choose subject  
+  - Choose class  
+  - Choose teacher  
+  - Select day  
+  - Select start/end time  
+- Search by subject/class/teacher  
+- Sort by start time (newest/oldest)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 📝 Exams
+- Create, update, delete exams  
+- Linked to lessons  
+- Search by subject/title  
+- Sorting & filtering support (title/class/teacher/date)
 
-## Deploy on Vercel
+### 📄 Assignments
+- Add assignments linked to lessons  
+- Auto-load Subjects → Lessons mapping
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 🧪 Results
+- CRUD for exam & assignment results  
+- Searchable  
+- Displays student + teacher + class
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 📅 Events
+- Admin can schedule events  
+- Class-specific or global
+
+### 📢 Announcements
+- Add announcements  
+- Optional class-specific announcements
+
+---
+
+## 🧱 Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | Next.js (App Router), React |
+| Backend | Next.js API routes |
+| UI | Tailwind CSS |
+| ORM | Prisma |
+| Database | MySQL |
+| Auth | JWT |
+| State | React Hook Form + Zod |
+
+---
+
+## 📂 Project Structure
+
