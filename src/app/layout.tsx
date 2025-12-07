@@ -12,7 +12,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Academix Dashboard",
-  description: "Next.js School Management System",
+  description: "Academix School Management System",
 };
 
 export default function RootLayout({

@@ -74,7 +74,7 @@ export default async function SingleStudentPage({ params }: any) {
             {student.name} {student.surname}
           </h1>
           <p className="text-[13px] text-gray-500 mt-1">
-            ID: {student.id}
+            {student.username}
           </p>
         </div>
 

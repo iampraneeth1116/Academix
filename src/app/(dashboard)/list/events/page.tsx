@@ -9,14 +9,12 @@ import Image from "next/image";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
-// Row type
 type EventList = Event & { class: Class | null };
 
 // ---------------- JWT AUTH ---------------- //
 async function getUserFromJWT() {
   const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value;
-
+  const token = cookieStore.get("accessToken")?.value;
   if (!token) return null;
 
   try {
@@ -28,58 +26,42 @@ async function getUserFromJWT() {
     return null;
   }
 }
-// ------------------------------------------- //
 
-const EventListPage = async ({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | undefined };
-}) => {
+const EventListPage = async ({ searchParams }: any) => {
 
   const user = await getUserFromJWT();
-  const role = user?.role;
+  const role = String(user?.role || "GUEST").toLowerCase();
   const currentUserId = user?.userId;
 
-  // TABLE COLUMNS
+  // ---------------- COLUMNS ---------------- //
   const columns = [
     { header: "Title", accessor: "title" },
     { header: "Class", accessor: "class" },
     { header: "Date", accessor: "date", className: "hidden md:table-cell" },
-    { header: "Start Time", accessor: "startTime", className: "hidden md:table-cell" },
-    { header: "End Time", accessor: "endTime", className: "hidden md:table-cell" },
+    { header: "Start", accessor: "startTime", className: "hidden md:table-cell" },
+    { header: "End", accessor: "endTime", className: "hidden md:table-cell" },
     ...(role === "admin" ? [{ header: "Actions", accessor: "action" }] : []),
   ];
 
-  // TABLE ROW
+  // ---------------- ROW UI ---------------- //
   const renderRow = (item: EventList) => (
     <tr
       key={item.id}
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
     >
       <td className="flex items-center gap-4 p-4">{item.title}</td>
-      <td>{item.class?.name ?? "-"}</td>
+      <td>{item.class?.name || "-"}</td>
 
-      {/* DATE */}
       <td className="hidden md:table-cell">
         {new Intl.DateTimeFormat("en-US").format(item.startTime)}
       </td>
 
-      {/* START */}
       <td className="hidden md:table-cell">
-        {item.startTime.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        })}
+        {item.startTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
       </td>
 
-      {/* END */}
       <td className="hidden md:table-cell">
-        {item.endTime.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        })}
+        {item.endTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
       </td>
 
       <td>
@@ -94,72 +76,53 @@ const EventListPage = async ({
   );
 
   // Pagination
-  const { page, ...queryParams } = searchParams;
-  const p = page ? parseInt(page) : 1;
+  const { page, search } = searchParams;
+  const p = page ? Number(page) : 1;
 
-  // ============================================
-  //  FILTERS
-  // ============================================
+  // ---------------- FILTER ---------------- //
   const query: Prisma.EventWhereInput = {};
+  if (search) query.title = { contains: search };
 
-  if (queryParams.search) {
-    query.title = {
-      contains: queryParams.search,
-      mode: "insensitive",
-    } as any;
-  }
-
-  // ============================================
-  //  ROLE-BASED EVENT ACCESS
-  // ============================================
-
+  // TEACHER → events for classes they teach
   if (role === "teacher") {
-    // Teacher → See events of classes they teach
-    const teacherClasses = await prisma.class.findMany({
+    const teachClasses = await prisma.class.findMany({
       where: { supervisorId: currentUserId },
       select: { id: true },
     });
-
-    query.classId = { in: teacherClasses.map((c) => c.id) };
+    query.classId = { in: teachClasses.map((c) => c.id) };
   }
 
+  // STUDENT → only their class
   if (role === "student") {
-    // Student → See events of their class
     const student = await prisma.student.findUnique({
       where: { id: currentUserId! },
       select: { classId: true },
     });
-
     query.classId = student?.classId ?? undefined;
   }
 
+  // PARENT → child's class
   if (role === "parent") {
-    // Parent → See events of their child's class
     const child = await prisma.student.findFirst({
       where: { parentId: currentUserId! },
       select: { classId: true },
     });
-
     query.classId = child?.classId ?? undefined;
   }
 
-  // Admin → no filter
-
-  // ============================================
-  //  FETCH DATA
-  // ============================================
+  // ---------------- FETCH ---------------- //
   const [data, count] = await prisma.$transaction([
     prisma.event.findMany({
       where: query,
       include: { class: true },
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
-      orderBy: { startTime: "asc" },
+      orderBy: { startTime: "desc" },
     }),
-
     prisma.event.count({ where: query }),
   ]);
 
+  // ---------------- UI ---------------- //
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
 
@@ -171,23 +134,15 @@ const EventListPage = async ({
           <TableSearch />
 
           <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
-
-            {role === "admin" && <FormContainer table="event" type="create" />}
+            {role === "admin" && (
+              <FormContainer table="event" type="create" />
+            )}
           </div>
         </div>
       </div>
 
-      {/* TABLE */}
       <Table columns={columns} renderRow={renderRow} data={data} />
 
-      {/* PAGINATION */}
       <Pagination page={p} count={count} />
     </div>
   );

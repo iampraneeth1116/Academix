@@ -63,7 +63,8 @@ export default function LoginPage() {
 
         {/* ROLE NAVBAR */}
         <div className="flex justify-around mb-6">
-          {(["admin", "teacher", "student"] as const).map((r) => (
+          {/* {(["admin", "teacher", "student"] as const).map((r) => ( */}
+          {(["admin"] as const).map((r) => (
             <button
               key={r}
               onClick={() => setRole(r)}

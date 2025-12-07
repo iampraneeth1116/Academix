@@ -12,7 +12,7 @@ import { cookies } from "next/headers";
 // ---------------- JWT AUTH ---------------- //
 async function getUserFromJWT() {
   const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value;
+  const token = cookieStore.get("accessToken")?.value;
 
   if (!token) return null;
 
@@ -45,8 +45,9 @@ const ResultListPage = async ({
   searchParams: { [key: string]: string | undefined };
 }) => {
 
+  // user role
   const user = await getUserFromJWT();
-  const role = user?.role;
+  const role = String(user?.role || "GUEST").toUpperCase();
   const currentUserId = user?.userId;
 
   // ---------------- COLUMNS ---------------- //
@@ -57,22 +58,27 @@ const ResultListPage = async ({
     { header: "Teacher", accessor: "teacher", className: "hidden md:table-cell" },
     { header: "Class", accessor: "class", className: "hidden md:table-cell" },
     { header: "Date", accessor: "date", className: "hidden md:table-cell" },
-    ...(role === "admin" || role === "teacher"
+    ...(role === "ADMIN" || role === "TEACHER"
       ? [{ header: "Actions", accessor: "action" }]
       : []),
   ];
 
   // ---------------- ROW RENDERER ---------------- //
   const renderRow = (item: ResultList) => (
-    <tr key={item.id} className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight">
-      <td className="flex items-center gap-4 p-4">{item.title}</td>
+    <tr
+      key={item.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+    >
+      <td>{item.title}</td>
 
-      <td>{item.studentName + " " + item.studentSurname}</td>
+      <td className="flex items-center gap-4 p-4">
+        {item.studentName} {item.studentSurname}
+      </td>
 
       <td className="hidden md:table-cell">{item.score}</td>
 
       <td className="hidden md:table-cell">
-        {item.teacherName + " " + item.teacherSurname}
+        {item.teacherName} {item.teacherSurname}
       </td>
 
       <td className="hidden md:table-cell">{item.className}</td>
@@ -82,10 +88,20 @@ const ResultListPage = async ({
       </td>
 
       <td>
-        {(role === "admin" || role === "teacher") && (
+        {(role === "ADMIN" || role === "TEACHER") && (
           <div className="flex items-center gap-2">
-            <FormContainer table="result" type="update" data={item} />
-            <FormContainer table="result" type="delete" id={item.id} />
+            <FormContainer
+              table="result"
+              type="update"
+              data={item}
+              currentUserId={currentUserId}
+            />
+            <FormContainer
+              table="result"
+              type="delete"
+              id={item.id}
+              currentUserId={currentUserId}
+            />
           </div>
         )}
       </td>
@@ -103,51 +119,41 @@ const ResultListPage = async ({
     query.studentId = queryParams.studentId;
   }
 
- if (queryParams.search) {
-  const search = queryParams.search;
+  if (queryParams.search) {
+    const search = queryParams.search;
 
-  query.OR = [
-    {
-      exam: {
-        title: {
-          contains: search,
-          mode: "insensitive",
-        } as Prisma.StringFilter,
+    query.OR = [
+      {
+        exam: {
+          title: { contains: search},
+        },
       },
-    },
-    {
-      assignment: {
-        title: {
-          contains: search,
-          mode: "insensitive",
-        } as Prisma.StringFilter,
+      {
+        assignment: {
+          title: { contains: search},
+        },
       },
-    },
-    {
-      student: {
-        name: {
-          contains: search,
-          mode: "insensitive",
-        } as Prisma.StringFilter,
+      {
+        student: {
+          name: { contains: search},
+        },
       },
-    },
-  ];
-}
-
+    ];
+  }
 
   // ---------------- ROLE RESTRICTIONS ---------------- //
-  if (role === "teacher") {
+  if (role === "TEACHER") {
     query.OR = [
       { exam: { lesson: { teacherId: currentUserId! } } },
       { assignment: { lesson: { teacherId: currentUserId! } } },
     ];
   }
 
-  if (role === "student") {
+  if (role === "STUDENT") {
     query.studentId = currentUserId!;
   }
 
-  if (role === "parent") {
+  if (role === "PARENT") {
     query.student = {
       parentId: currentUserId!,
     };
@@ -161,22 +167,12 @@ const ResultListPage = async ({
         student: true,
         exam: {
           include: {
-            lesson: {
-              include: {
-                class: true,
-                teacher: true,
-              },
-            },
+            lesson: { include: { class: true, teacher: true } },
           },
         },
         assignment: {
           include: {
-            lesson: {
-              include: {
-                class: true,
-                teacher: true,
-              },
-            },
+            lesson: { include: { class: true, teacher: true } },
           },
         },
       },
@@ -210,7 +206,6 @@ const ResultListPage = async ({
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
-
       {/* TOP BAR */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Results</h1>
@@ -227,8 +222,12 @@ const ResultListPage = async ({
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
 
-            {(role === "admin" || role === "teacher") && (
-              <FormContainer table="result" type="create" />
+            {(role === "ADMIN" || role === "TEACHER") && (
+              <FormContainer
+                table="result"
+                type="create"
+                currentUserId={currentUserId}
+              />
             )}
           </div>
         </div>

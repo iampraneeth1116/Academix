@@ -1,33 +1,42 @@
 "use client";
 
-import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const TableSearch = () => {
+  const params = useSearchParams();
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  // Get initial search from URL
+  const initialSearch = params.get("search") || "";
+  const [value, setValue] = useState(initialSearch);
 
-    const value = (e.currentTarget[0] as HTMLInputElement).value;
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      const newParams = new URLSearchParams(params.toString());
 
-    const params = new URLSearchParams(window.location.search);
-    params.set("search", value);
-    router.push(`${window.location.pathname}?${params}`);
-  };
+      if (value.trim() === "") {
+        newParams.delete("search");
+      } else {
+        newParams.set("search", value);
+      }
+
+      newParams.delete("page"); // reset to page 1 on new search
+
+      router.push(`?${newParams.toString()}`);
+    }, 300); // debounce duration
+
+    return () => clearTimeout(delay);
+  }, [value]);
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="w-full md:w-auto flex items-center gap-2 text-xs rounded-full ring-[1.5px] ring-gray-300 px-2"
-    >
-      <Image src="/search.png" alt="" width={14} height={14} />
-      <input
-        type="text"
-        placeholder="Search..."
-        className="w-[200px] p-2 bg-transparent outline-none"
-      />
-    </form>
+    <input
+      type="text"
+      placeholder="Search teacher name..."
+      className="px-3 py-2 border rounded-md text-sm"
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+    />
   );
 };
 

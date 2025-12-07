@@ -1,211 +1,239 @@
-import Announcements from "@/components/Announcements";
-import BigCalendarContainer from "@/components/BigCalendarContainer";
-import FormContainer from "@/components/FormContainer";
-import Performance from "@/components/Performance";
-import StudentAttendanceCard from "@/components/StudentAttendanceCard";
+// app/(dashboard)/list/teachers/[id]/page.tsx
+
 import prisma from "@/lib/prisma";
-import jwt from "jsonwebtoken";
 import Image from "next/image";
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
-import { Suspense } from "react";
+import FormContainer from "@/components/FormContainer";
+import Performance from "@/components/Performance";
+import Announcements from "@/components/Announcements";
 
-const SingleStudentPage = async ({ params }: { params: Promise<{ id: string }> }) => {
-  const { id } = await params;
-
-  // ---------------- AUTH ---------------- //
+// ---------------- JWT AUTH ---------------- //
+async function getUserFromJWT() {
   const cookieStore = await cookies();
   const token = cookieStore.get("accessToken")?.value;
 
-  let role: "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "GUEST" = "GUEST";
+  if (!token) return null;
 
-  if (token) {
-    try {
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-      role = decoded.role || "GUEST";
-    } catch {}
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET!) as any;
+  } catch {
+    return null;
   }
+}
 
-  // ---------------- FETCH STUDENT ---------------- //
-  const student = await prisma.student.findUnique({
+export default async function SingleTeacherPage({ params }: any) {
+  const resolved = typeof params.then === "function" ? await params : params;
+  const id = resolved.id;
+
+  if (!id) return notFound();
+
+  const user = await getUserFromJWT();
+  const role: string = user?.role?.toUpperCase() ?? "GUEST";
+
+  // Fetch teacher + subjects + classes + lessons
+  const teacher = await prisma.teacher.findUnique({
     where: { id },
     include: {
-      class: {
+      teacherSubjects: {
+        include: { subject: true },
+      },
+      classes: true,
+      lessons: {
         include: {
-          _count: {
-            select: { lessons: true },
-          },
+          class: true,
+          subject: true,
         },
       },
-      grade: true,
     },
   });
 
-  if (!student) return notFound();
+  if (!teacher) return notFound();
+
+  const subjects = teacher.teacherSubjects.map((ts) => ts.subject);
+  const classes = teacher.classes;
+  const lessons = teacher.lessons;
 
   return (
-    <div className="flex-1 p-4 flex flex-col gap-6 xl:flex-row bg-gray-50">
+    <div className="flex-1 p-6 flex flex-col gap-6 xl:flex-row bg-gray-50">
 
-      {/* LEFT SECTION */}
+      {/* LEFT SIDE (2/3 width) */}
       <div className="w-full xl:w-2/3 flex flex-col gap-6">
 
-        {/* TOP SECTION */}
-        <div className="flex flex-col lg:flex-row gap-6">
+        {/* ---------------- PROFILE CARD ---------------- */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 flex gap-6 border border-gray-100">
 
-          {/* STUDENT CARD */}
-          <div className="bg-white shadow-sm p-6 rounded-md flex-1 flex gap-6">
-
+          {/* Avatar */}
+          <div className="flex flex-col items-center">
             <Image
-              src={student.img || "/noAvatar.png"}
-              alt="Student Image"
-              width={140}
-              height={140}
-              className="rounded-full object-cover border w-[140px] h-[140px]"
+              src={teacher.img || "/noAvatar.png"}
+              alt=""
+              width={130}
+              height={130}
+              className="rounded-full w-[130px] h-[130px] object-cover border shadow"
             />
-
-            <div className="flex flex-col justify-between flex-1">
-
-              {/* NAME + EDIT BUTTON */}
-              <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">
-                  {student.name} {student.surname}
-                </h1>
-
-                {role === "ADMIN" && (
-                  <FormContainer
-                    table="student"
-                    type="update"
-                    data={student}
-                    currentUserId={student.id}
-                  />
-                )}
-              </div>
-
-              <p className="text-sm text-gray-500 mt-1">
-                Enrolled Student • Active Learner
-              </p>
-
-              {/* DETAILS GRID */}
-              <div className="grid grid-cols-2 gap-3 mt-4 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Image src="/blood.png" alt="" width={16} height={16} />
-                  <span>{student.bloodType}</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Image src="/date.png" alt="" width={16} height={16} />
-                  <span>{new Intl.DateTimeFormat("en-GB").format(student.birthday)}</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Image src="/mail.png" alt="" width={16} height={16} />
-                  <span>{student.email || "-"}</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Image src="/phone.png" alt="" width={16} height={16} />
-                  <span>{student.phone || "-"}</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Image src="/singleClass.png" alt="" width={16} height={16} />
-                  <span>Class: {student.class.name}</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Image src="/singleBranch.png" alt="" width={16} height={16} />
-                  <span>Grade: {student.grade.level}th</span>
-                </div>
-              </div>
-            </div>
+            <p className="text-xs text-gray-400 mt-2 italic">Teacher Profile</p>
           </div>
 
-          {/* SMALL STATS CARDS */}
-          <div className="flex flex-col md:flex-row lg:flex-col gap-4 w-full lg:w-[35%]">
+          {/* Right content */}
+          <div className="flex flex-col flex-1">
 
-            {/* Attendance */}
-            <div className="bg-white shadow-sm p-4 rounded-md flex items-center gap-4">
-              <Image src="/singleAttendance.png" width={28} height={28} alt="" />
-              <Suspense fallback={<span>Loading...</span>}>
-                <StudentAttendanceCard id={student.id} />
-              </Suspense>
-            </div>
-
-            {/* Lessons */}
-            <div className="bg-white shadow-sm p-4 rounded-md flex items-center gap-4">
-              <Image src="/singleLesson.png" width={28} height={28} alt="" />
+            {/* Name + Edit */}
+            <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-xl font-semibold">
-                  {student.class._count.lessons}
+                <h1 className="text-3xl font-semibold text-gray-800">
+                  {teacher.name} {teacher.surname}
                 </h1>
-                <span className="text-gray-500 text-sm">Lessons</span>
+                <p className="text-sm text-gray-500">{teacher.username}</p>
               </div>
+
+              {role === "ADMIN" && (
+                <div className="p-2 rounded-full hover:bg-gray-100 cursor-pointer transition">
+                  <FormContainer table="teacher" type="update" data={teacher} />
+                </div>
+              )}
             </div>
 
-            {/* Class */}
-            <div className="bg-white shadow-sm p-4 rounded-md flex items-center gap-4">
-              <Image src="/singleClass.png" width={28} height={28} alt="" />
-              <div>
-                <h1 className="text-xl font-semibold">{student.class.name}</h1>
-                <span className="text-gray-500 text-sm">Class</span>
-              </div>
-            </div>
+            {/* Info grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-5 text-gray-700">
 
-            {/* Grade */}
-            <div className="bg-white shadow-sm p-4 rounded-md flex items-center gap-4">
-              <Image src="/singleBranch.png" width={28} height={28} alt="" />
-              <div>
-                <h1 className="text-xl font-semibold">{student.grade.level}th</h1>
-                <span className="text-gray-500 text-sm">Grade</span>
+              <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                <Image src="/mail.png" width={16} height={16} alt="" />
+                <span>{teacher.email || "-"}</span>
               </div>
+
+              <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                <Image src="/phone.png" width={16} height={16} alt="" />
+                <span>{teacher.phone || "-"}</span>
+              </div>
+
+              <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                <Image src="/singleBranch.png" width={16} height={16} alt="" />
+                <span>{teacher.address}</span>
+              </div>
+
+              <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                <Image src="/blood.png" width={16} height={16} alt="" />
+                <span>{teacher.bloodType}</span>
+              </div>
+
             </div>
           </div>
         </div>
 
-        {/* CALENDAR SECTION */}
-        <div className="bg-white shadow-sm rounded-md p-6">
-          <h1 className="text-lg font-semibold mb-4">Student&apos;s Schedule</h1>
-          <BigCalendarContainer type="classId" id={student.classId} />
+        {/* ---------------- STATS CARDS ---------------- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Subjects Count */}
+          <div className="bg-white border rounded-xl shadow p-5 flex gap-4 items-center hover:shadow-lg transition">
+            <Image src="/singleLesson.png" width={28} height={28} alt="" />
+            <div>
+              <h1 className="text-xl font-semibold">{subjects.length}</h1>
+              <p className="text-gray-500 text-xs">Subjects Taught</p>
+            </div>
+          </div>
+
+          {/* Classes Count */}
+          <div className="bg-white border rounded-xl shadow p-5 flex gap-4 items-center hover:shadow-lg transition">
+            <Image src="/singleClass.png" width={28} height={28} alt="" />
+            <div>
+              <h1 className="text-xl font-semibold">{classes.length}</h1>
+              <p className="text-gray-500 text-xs">Classes Supervised</p>
+            </div>
+          </div>
+
+          {/* Lessons Count */}
+          <div className="bg-white border rounded-xl shadow p-5 flex gap-4 items-center hover:shadow-lg transition">
+            <Image src="/singleAttendance.png" width={28} height={28} alt="" />
+            <div>
+              <h1 className="text-xl font-semibold">{lessons.length}</h1>
+              <p className="text-gray-500 text-xs">Lessons</p>
+            </div>
+          </div>
+
+          {/* Experience */}
+          <div className="bg-white border rounded-xl shadow p-5 flex gap-4 items-center hover:shadow-lg transition">
+            <Image src="/singleBranch.png" width={28} height={28} alt="" />
+            <div>
+              <h1 className="text-xl font-semibold">
+                {new Date().getFullYear() - 2020}+ yrs
+              </h1>
+              <p className="text-gray-500 text-xs">Experience</p>
+            </div>
+          </div>
+
         </div>
+
+        {/* ---------------- LESSONS TABLE ---------------- */}
+        <div className="bg-white rounded-2xl shadow p-6 border border-gray-100">
+          <h1 className="text-lg font-semibold mb-4">Lessons Taught</h1>
+
+          <div className="flex flex-col gap-3">
+            {lessons.map((l) => (
+              <div
+                key={l.id}
+                className="p-4 bg-gray-50 rounded-lg border flex justify-between"
+              >
+                <span className="font-medium">{l.name}</span>
+                <span className="text-gray-500 text-sm">
+                  {l.subject.name} • {l.class.name}
+                </span>
+              </div>
+            ))}
+
+            {lessons.length === 0 && (
+              <p className="text-gray-500 text-sm">No lessons assigned.</p>
+            )}
+          </div>
+        </div>
+
       </div>
 
-      {/* RIGHT SECTION */}
+      {/* RIGHT SIDE (1/3 width) */}
       <div className="w-full xl:w-1/3 flex flex-col gap-6">
 
-        {/* SHORTCUT BUTTONS */}
-        <div className="bg-white shadow-sm p-6 rounded-md">
-          <h1 className="text-lg font-semibold">Shortcuts</h1>
+        {/* ---------------- SHORTCUTS ---------------- */}
+        <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100">
+          <h1 className="text-lg font-semibold text-gray-800">Shortcuts</h1>
 
           <div className="mt-4 flex flex-col gap-3 text-sm">
-
-            <Link className="p-3 rounded-md bg-aSkyLight" href={`/list/lessons?classId=${student.classId}`}>
-              Student&apos;s Lessons
+            <Link
+              href={`/list/lessons?teacherId=${teacher.id}`}
+              className="p-3 rounded-md bg-aSkyLight hover:brightness-95 transition"
+            >
+              Teacher's Lessons
             </Link>
 
-            <Link className="p-3 rounded-md bg-aPurpleLight" href={`/list/teachers?classId=${student.classId}`}>
-              Student&apos;s Teachers
+            <Link
+              href={`/list/exams?teacherId=${teacher.id}`}
+              className="p-3 rounded-md bg-aPurpleLight hover:brightness-95 transition"
+            >
+              Teacher's Exams
             </Link>
 
-            <Link className="p-3 rounded-md bg-pink-100" href={`/list/exams?classId=${student.classId}`}>
-              Student&apos;s Exams
+            <Link
+              href={`/list/assignments?teacherId=${teacher.id}`}
+              className="p-3 rounded-md bg-pink-100 hover:brightness-95 transition"
+            >
+              Teacher's Assignments
             </Link>
 
-            <Link className="p-3 rounded-md bg-aSkyLight" href={`/list/assignments?classId=${student.classId}`}>
-              Student&apos;s Assignments
-            </Link>
-
-            <Link className="p-3 rounded-md bg-aYellowLight" href={`/list/results?studentId=${student.id}`}>
-              Student&apos;s Results
+            <Link
+              href={`/list/results?teacherId=${teacher.id}`}
+              className="p-3 rounded-md bg-aYellowLight hover:brightness-95 transition"
+            >
+              Student Results (Teacher)
             </Link>
           </div>
         </div>
 
         <Performance />
         <Announcements />
+
       </div>
     </div>
   );
-};
-
-export default SingleStudentPage;
+}

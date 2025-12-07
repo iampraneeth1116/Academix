@@ -61,7 +61,7 @@ const ExamListPage = async ({
     ...(role === "ADMIN" || role === "TEACHER"
       ? [{ header: "Actions", accessor: "action" }]
       : []),
-  ];
+  ]
 
   // RENDER ROW
 const renderRow = (item: ExamList) => (
@@ -126,6 +126,8 @@ for (const [key, value] of Object.entries(queryParams)) {
           },
         },
       ];
+
+
       break;
   }
 }
